@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import { Menu, X, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import logo from "@/assets/touch-cleaning-logo.svg";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { user, signOut } = useAuth();
 
   const navLinks = [
     { name: "Home", path: "/" },
@@ -36,9 +38,26 @@ const Navbar = () => {
                 {link.name}
               </Link>
             ))}
-            <Button asChild variant="default" size="lg">
-              <Link to="/book">Book Now</Link>
-            </Button>
+            {user ? (
+              <>
+                <Button asChild variant="default" size="lg">
+                  <Link to="/book">Book Now</Link>
+                </Button>
+                <Button variant="outline" size="lg" onClick={signOut}>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign Out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button asChild variant="default" size="lg">
+                  <Link to="/book">Book Now</Link>
+                </Button>
+                <Button asChild variant="outline" size="lg">
+                  <Link to="/auth">Sign In</Link>
+                </Button>
+              </>
+            )}
           </div>
 
           <button
@@ -59,12 +78,29 @@ const Navbar = () => {
                 className="block text-base font-medium text-foreground/80 hover:text-foreground transition-colors"
                 onClick={() => setIsOpen(false)}
               >
-                {link.name}
+              {link.name}
               </Link>
             ))}
-            <Button asChild variant="default" className="w-full" size="lg">
-              <Link to="/book" onClick={() => setIsOpen(false)}>Book Now</Link>
-            </Button>
+            {user ? (
+              <>
+                <Button asChild variant="default" className="w-full" size="lg">
+                  <Link to="/book" onClick={() => setIsOpen(false)}>Book Now</Link>
+                </Button>
+                <Button variant="outline" className="w-full" size="lg" onClick={signOut}>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign Out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button asChild variant="default" className="w-full" size="lg">
+                  <Link to="/book" onClick={() => setIsOpen(false)}>Book Now</Link>
+                </Button>
+                <Button asChild variant="outline" className="w-full" size="lg">
+                  <Link to="/auth" onClick={() => setIsOpen(false)}>Sign In</Link>
+                </Button>
+              </>
+            )}
           </div>
         )}
       </div>
