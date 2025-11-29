@@ -14,6 +14,75 @@ export type Database = {
   }
   public: {
     Tables: {
+      bookings: {
+        Row: {
+          actual_cost: number | null
+          actual_hours: number | null
+          completed_at: string | null
+          created_at: string
+          customer_id: string
+          email: string
+          estimated_cost: number | null
+          estimated_hours: number | null
+          first_name: string
+          id: string
+          last_name: string
+          notes: string | null
+          phone: string
+          preferred_date: string
+          property_type: Database["public"]["Enums"]["property_type"]
+          service_address: string
+          service_type: Database["public"]["Enums"]["service_type"]
+          staff_id: string | null
+          status: Database["public"]["Enums"]["booking_status"]
+          updated_at: string
+        }
+        Insert: {
+          actual_cost?: number | null
+          actual_hours?: number | null
+          completed_at?: string | null
+          created_at?: string
+          customer_id: string
+          email: string
+          estimated_cost?: number | null
+          estimated_hours?: number | null
+          first_name: string
+          id?: string
+          last_name: string
+          notes?: string | null
+          phone: string
+          preferred_date: string
+          property_type: Database["public"]["Enums"]["property_type"]
+          service_address: string
+          service_type: Database["public"]["Enums"]["service_type"]
+          staff_id?: string | null
+          status?: Database["public"]["Enums"]["booking_status"]
+          updated_at?: string
+        }
+        Update: {
+          actual_cost?: number | null
+          actual_hours?: number | null
+          completed_at?: string | null
+          created_at?: string
+          customer_id?: string
+          email?: string
+          estimated_cost?: number | null
+          estimated_hours?: number | null
+          first_name?: string
+          id?: string
+          last_name?: string
+          notes?: string | null
+          phone?: string
+          preferred_date?: string
+          property_type?: Database["public"]["Enums"]["property_type"]
+          service_address?: string
+          service_type?: Database["public"]["Enums"]["service_type"]
+          staff_id?: string | null
+          status?: Database["public"]["Enums"]["booking_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           address: string | null
@@ -67,7 +136,21 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      booking_analytics: {
+        Row: {
+          active_staff: number | null
+          avg_booking_value: number | null
+          cancelled_count: number | null
+          completed_count: number | null
+          confirmed_count: number | null
+          in_progress_count: number | null
+          pending_count: number | null
+          total_bookings: number | null
+          total_customers: number | null
+          total_revenue: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {
@@ -80,6 +163,20 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "staff" | "customer"
+      booking_status:
+        | "pending"
+        | "confirmed"
+        | "in_progress"
+        | "completed"
+        | "cancelled"
+      property_type: "apartment" | "house" | "office" | "retail" | "industrial"
+      service_type:
+        | "residential"
+        | "commercial"
+        | "deep_clean"
+        | "carpet_clean"
+        | "window_clean"
+        | "end_of_lease"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -208,6 +305,22 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "staff", "customer"],
+      booking_status: [
+        "pending",
+        "confirmed",
+        "in_progress",
+        "completed",
+        "cancelled",
+      ],
+      property_type: ["apartment", "house", "office", "retail", "industrial"],
+      service_type: [
+        "residential",
+        "commercial",
+        "deep_clean",
+        "carpet_clean",
+        "window_clean",
+        "end_of_lease",
+      ],
     },
   },
 } as const

@@ -15,6 +15,9 @@ import Blog from "./pages/Blog";
 import Locations from "./pages/Locations";
 import Team from "./pages/Team";
 import Auth from "./pages/Auth";
+import Dashboard from "./pages/dashboard/Dashboard";
+import UsersManagement from "./pages/dashboard/UsersManagement";
+import BookingsManagement from "./pages/dashboard/BookingsManagement";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,6 +40,9 @@ const App = () => (
             <Route path="/team" element={<Team />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/book" element={<ProtectedRoute><BookNow /></ProtectedRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/dashboard/users" element={<ProtectedRoute><UsersManagement /></ProtectedRoute>} />
+            <Route path="/dashboard/bookings" element={<ProtectedRoute><BookingsManagement /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
