@@ -4,6 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, Home, Sparkles, Wind, Droplets, Briefcase } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { SEOHead } from "@/components/SEOHead";
+import residentialImage from "@/assets/residential-clean.jpg";
+import commercialImage from "@/assets/commercial-clean.jpg";
 
 const Services = () => {
   const services = [
@@ -77,6 +80,7 @@ const Services = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead page="services" />
       <Navbar />
       
       <div className="pt-32 pb-20 px-4">
@@ -89,6 +93,57 @@ const Services = () => {
             <p className="text-xl text-muted-foreground">
               Comprehensive cleaning solutions designed to meet your specific needs, backed by years of experience and 500+ satisfied clients.
             </p>
+          </div>
+
+          {/* Featured Services with Images */}
+          <div className="grid md:grid-cols-2 gap-8 mb-16">
+            <Card className="overflow-hidden hover:shadow-lg transition-all">
+              <div className="h-64 overflow-hidden">
+                <img 
+                  src={residentialImage} 
+                  alt="Residential cleaning services" 
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                />
+              </div>
+              <CardHeader>
+                <CardTitle className="flex items-center text-2xl">
+                  <Home className="mr-2 h-6 w-6 text-primary" />
+                  Residential Cleaning
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground mb-4">
+                  Transform your home with our comprehensive residential cleaning services. Professional, reliable, and tailored to your lifestyle.
+                </p>
+                <Button asChild>
+                  <Link to="/contact">Get a Quote</Link>
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="overflow-hidden hover:shadow-lg transition-all">
+              <div className="h-64 overflow-hidden">
+                <img 
+                  src={commercialImage} 
+                  alt="Commercial cleaning services" 
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                />
+              </div>
+              <CardHeader>
+                <CardTitle className="flex items-center text-2xl">
+                  <Building2 className="mr-2 h-6 w-6 text-secondary" />
+                  Commercial Cleaning
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground mb-4">
+                  Maintain a professional environment with our commercial cleaning solutions. Trusted by 500+ businesses across Sydney.
+                </p>
+                <Button asChild>
+                  <Link to="/contact">Get a Quote</Link>
+                </Button>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Services Grid */}

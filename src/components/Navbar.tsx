@@ -40,6 +40,9 @@ const Navbar = () => {
             ))}
             {user ? (
               <>
+                <Button asChild variant="ghost" size="lg">
+                  <Link to="/dashboard">Dashboard</Link>
+                </Button>
                 <Button asChild variant="default" size="lg">
                   <Link to="/book">Book Now</Link>
                 </Button>
@@ -83,6 +86,9 @@ const Navbar = () => {
             ))}
             {user ? (
               <>
+                <Button asChild variant="ghost" className="w-full" size="lg">
+                  <Link to="/dashboard" onClick={() => setIsOpen(false)}>Dashboard</Link>
+                </Button>
                 <Button asChild variant="default" className="w-full" size="lg">
                   <Link to="/book" onClick={() => setIsOpen(false)}>Book Now</Link>
                 </Button>

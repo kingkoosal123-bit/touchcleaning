@@ -4,6 +4,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Sparkles, Shield, Users, Award, CheckCircle, ArrowRight } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { SEOHead } from "@/components/SEOHead";
+import heroImage from "@/assets/hero-cleaning.jpg";
+import teamImage from "@/assets/team-cleaning.jpg";
 
 const Home = () => {
   const services = [
@@ -42,11 +45,19 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead page="home" />
       <Navbar />
       
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 px-4 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-accent/5" />
+        <div className="absolute inset-0">
+          <img 
+            src={heroImage} 
+            alt="Professional cleaning service" 
+            className="w-full h-full object-cover opacity-20"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background/80 to-accent/20" />
+        </div>
         <div className="container mx-auto relative z-10">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-foreground mb-6 leading-tight">
@@ -142,8 +153,15 @@ const Home = () => {
               </Button>
             </div>
             <div className="relative">
-              <Card className="border-border p-8">
-                <div className="space-y-6">
+              <div className="rounded-2xl overflow-hidden shadow-xl">
+                <img 
+                  src={teamImage} 
+                  alt="Professional cleaning team" 
+                  className="w-full h-auto object-cover"
+                />
+              </div>
+              <Card className="absolute -bottom-6 -left-6 border-border p-6 bg-background/95 backdrop-blur">
+                <div className="space-y-4">
                   <div className="flex items-center space-x-4">
                     <div className="bg-primary/10 p-4 rounded-lg">
                       <Award className="w-8 h-8 text-primary" />
