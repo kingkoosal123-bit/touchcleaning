@@ -29,7 +29,7 @@ export function DashboardSidebar() {
     { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
     { title: "Users", url: "/dashboard/users", icon: Users },
     { title: "Bookings", url: "/dashboard/bookings", icon: Calendar },
-    { title: "Analytics", url: "/dashboard/analytics", icon: BarChart3 },
+    { title: "SEO Settings", url: "/dashboard/seo", icon: BarChart3 },
     { title: "Staff", url: "/dashboard/staff", icon: UserCog },
   ];
 
