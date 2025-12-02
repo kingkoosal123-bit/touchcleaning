@@ -15,11 +15,16 @@ import Blog from "./pages/Blog";
 import Locations from "./pages/Locations";
 import Team from "./pages/Team";
 import Auth from "./pages/Auth";
-import Dashboard from "./pages/dashboard/Dashboard";
-import UsersManagement from "./pages/dashboard/UsersManagement";
-import BookingsManagement from "./pages/dashboard/BookingsManagement";
-import { SEOSettings } from "./pages/dashboard/SEOSettings";
 import NotFound from "./pages/NotFound";
+import AdminAuth from "./pages/admin/AdminAuth";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminBookings from "./pages/admin/AdminBookings";
+import AdminUsers from "./pages/admin/AdminUsers";
+import CreateStaff from "./pages/admin/CreateStaff";
+import CreateAdmin from "./pages/admin/CreateAdmin";
+import AdminSEO from "./pages/admin/AdminSEO";
+import StaffDashboard from "./pages/staff/StaffDashboard";
+import CustomerDashboard from "./pages/customer/CustomerDashboard";
 
 const queryClient = new QueryClient();
 
@@ -40,12 +45,16 @@ const App = () => (
             <Route path="/locations" element={<Locations />} />
             <Route path="/team" element={<Team />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/auth/admin" element={<AdminAuth />} />
             <Route path="/book" element={<ProtectedRoute><BookNow /></ProtectedRoute>} />
-            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/dashboard/users" element={<ProtectedRoute><UsersManagement /></ProtectedRoute>} />
-            <Route path="/dashboard/bookings" element={<ProtectedRoute><BookingsManagement /></ProtectedRoute>} />
-            <Route path="/dashboard/seo" element={<ProtectedRoute><SEOSettings /></ProtectedRoute>} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="/dashboard" element={<ProtectedRoute><CustomerDashboard /></ProtectedRoute>} />
+            <Route path="/staff/dashboard" element={<ProtectedRoute><StaffDashboard /></ProtectedRoute>} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/bookings" element={<AdminBookings />} />
+            <Route path="/admin/users" element={<AdminUsers />} />
+            <Route path="/admin/users/create-staff" element={<CreateStaff />} />
+            <Route path="/admin/users/create-admin" element={<CreateAdmin />} />
+            <Route path="/admin/seo" element={<AdminSEO />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

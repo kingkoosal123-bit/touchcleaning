@@ -32,9 +32,14 @@ export type Database = {
           preferred_date: string
           property_type: Database["public"]["Enums"]["property_type"]
           service_address: string
+          service_location_lat: number | null
+          service_location_lng: number | null
           service_type: Database["public"]["Enums"]["service_type"]
+          staff_hours_worked: number | null
           staff_id: string | null
           status: Database["public"]["Enums"]["booking_status"]
+          task_accepted_at: string | null
+          task_started_at: string | null
           updated_at: string
         }
         Insert: {
@@ -54,9 +59,14 @@ export type Database = {
           preferred_date: string
           property_type: Database["public"]["Enums"]["property_type"]
           service_address: string
+          service_location_lat?: number | null
+          service_location_lng?: number | null
           service_type: Database["public"]["Enums"]["service_type"]
+          staff_hours_worked?: number | null
           staff_id?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
+          task_accepted_at?: string | null
+          task_started_at?: string | null
           updated_at?: string
         }
         Update: {
@@ -76,9 +86,14 @@ export type Database = {
           preferred_date?: string
           property_type?: Database["public"]["Enums"]["property_type"]
           service_address?: string
+          service_location_lat?: number | null
+          service_location_lng?: number | null
           service_type?: Database["public"]["Enums"]["service_type"]
+          staff_hours_worked?: number | null
           staff_id?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
+          task_accepted_at?: string | null
+          task_started_at?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -112,6 +127,41 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      task_photos: {
+        Row: {
+          booking_id: string
+          caption: string | null
+          id: string
+          photo_url: string
+          staff_id: string
+          uploaded_at: string
+        }
+        Insert: {
+          booking_id: string
+          caption?: string | null
+          id?: string
+          photo_url: string
+          staff_id: string
+          uploaded_at?: string
+        }
+        Update: {
+          booking_id?: string
+          caption?: string | null
+          id?: string
+          photo_url?: string
+          staff_id?: string
+          uploaded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_photos_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -177,6 +227,7 @@ export type Database = {
         | "carpet_clean"
         | "window_clean"
         | "end_of_lease"
+      task_status: "assigned" | "accepted" | "working" | "completed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -321,6 +372,7 @@ export const Constants = {
         "window_clean",
         "end_of_lease",
       ],
+      task_status: ["assigned", "accepted", "working", "completed"],
     },
   },
 } as const
