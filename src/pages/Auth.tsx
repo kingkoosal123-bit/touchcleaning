@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,11 +17,26 @@ const Auth = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Redirect if already logged in
+  // Redirect based on role if already logged in
   useEffect(() => {
-    if (user) {
-      navigate("/");
-    }
+    const checkUserRole = async () => {
+      if (user) {
+        const { data: roleData } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        
+        if (roleData?.role === "admin") {
+          navigate("/admin");
+        } else if (roleData?.role === "staff") {
+          navigate("/staff/dashboard");
+        } else {
+          navigate("/dashboard");
+        }
+      }
+    };
+    checkUserRole();
   }, [user, navigate]);
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -72,10 +88,10 @@ const Auth = () => {
     setIsLoading(false);
   };
 
-  return (
+return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-1 flex items-center justify-center px-4 py-12">
+      <main className="flex-1 flex items-center justify-center px-4 pt-28 pb-12">
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Welcome to Touch Cleaning</CardTitle>
