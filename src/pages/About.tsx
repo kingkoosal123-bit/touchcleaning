@@ -8,7 +8,7 @@ const About = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       
-      <div className="pt-32 pb-20 px-4">
+      <div className="pt-40 pb-20 px-4">
         <div className="container mx-auto max-w-6xl">
           {/* Header */}
           <div className="text-center mb-16">

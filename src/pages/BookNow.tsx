@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -18,6 +18,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
 const BookNow = () => {
+  const [searchParams] = useSearchParams();
   const [date, setDate] = useState<Date>();
   const [loading, setLoading] = useState(false);
   const [serviceType, setServiceType] = useState("");
@@ -25,6 +26,14 @@ const BookNow = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Pre-fill service type from URL params
+  useEffect(() => {
+    const service = searchParams.get("service");
+    if (service && ["residential", "commercial", "deep_clean", "carpet_clean", "window_clean", "end_of_lease"].includes(service)) {
+      setServiceType(service);
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -67,7 +76,7 @@ const BookNow = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       
-      <div className="pt-32 pb-20 px-4">
+      <div className="pt-40 pb-20 px-4">
         <div className="container mx-auto max-w-4xl">
           <div className="text-center mb-12">
             <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6">
