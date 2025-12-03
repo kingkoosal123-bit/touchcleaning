@@ -14,6 +14,102 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_activity_logs: {
+        Row: {
+          action_type: string
+          admin_id: string
+          created_at: string
+          description: string
+          entity_id: string | null
+          entity_type: string
+          id: string
+          ip_address: string | null
+          new_values: Json | null
+          old_values: Json | null
+          user_agent: string | null
+        }
+        Insert: {
+          action_type: string
+          admin_id: string
+          created_at?: string
+          description: string
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          ip_address?: string | null
+          new_values?: Json | null
+          old_values?: Json | null
+          user_agent?: string | null
+        }
+        Update: {
+          action_type?: string
+          admin_id?: string
+          created_at?: string
+          description?: string
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          ip_address?: string | null
+          new_values?: Json | null
+          old_values?: Json | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
+      admin_details: {
+        Row: {
+          admin_level: string | null
+          can_edit_settings: boolean | null
+          can_manage_admins: boolean | null
+          can_manage_bookings: boolean | null
+          can_manage_customers: boolean | null
+          can_manage_payments: boolean | null
+          can_manage_staff: boolean | null
+          can_view_reports: boolean | null
+          created_at: string
+          department: string | null
+          id: string
+          last_login_at: string | null
+          login_count: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_level?: string | null
+          can_edit_settings?: boolean | null
+          can_manage_admins?: boolean | null
+          can_manage_bookings?: boolean | null
+          can_manage_customers?: boolean | null
+          can_manage_payments?: boolean | null
+          can_manage_staff?: boolean | null
+          can_view_reports?: boolean | null
+          created_at?: string
+          department?: string | null
+          id?: string
+          last_login_at?: string | null
+          login_count?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_level?: string | null
+          can_edit_settings?: boolean | null
+          can_manage_admins?: boolean | null
+          can_manage_bookings?: boolean | null
+          can_manage_customers?: boolean | null
+          can_manage_payments?: boolean | null
+          can_manage_staff?: boolean | null
+          can_view_reports?: boolean | null
+          created_at?: string
+          department?: string | null
+          id?: string
+          last_login_at?: string | null
+          login_count?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       bookings: {
         Row: {
           actual_cost: number | null
@@ -98,6 +194,139 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_details: {
+        Row: {
+          access_instructions: string | null
+          allergies_sensitivities: string | null
+          average_rating_given: number | null
+          billing_address: string | null
+          created_at: string
+          customer_tier: string | null
+          first_booking_date: string | null
+          id: string
+          is_active: boolean | null
+          last_booking_date: string | null
+          loyalty_points: number | null
+          notes: string | null
+          pets_info: string | null
+          preferred_contact_method: string | null
+          preferred_time_slot: string | null
+          property_count: number | null
+          referral_code: string | null
+          referred_by: string | null
+          special_instructions: string | null
+          total_bookings: number | null
+          total_spent: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_instructions?: string | null
+          allergies_sensitivities?: string | null
+          average_rating_given?: number | null
+          billing_address?: string | null
+          created_at?: string
+          customer_tier?: string | null
+          first_booking_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_booking_date?: string | null
+          loyalty_points?: number | null
+          notes?: string | null
+          pets_info?: string | null
+          preferred_contact_method?: string | null
+          preferred_time_slot?: string | null
+          property_count?: number | null
+          referral_code?: string | null
+          referred_by?: string | null
+          special_instructions?: string | null
+          total_bookings?: number | null
+          total_spent?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_instructions?: string | null
+          allergies_sensitivities?: string | null
+          average_rating_given?: number | null
+          billing_address?: string | null
+          created_at?: string
+          customer_tier?: string | null
+          first_booking_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_booking_date?: string | null
+          loyalty_points?: number | null
+          notes?: string | null
+          pets_info?: string | null
+          preferred_contact_method?: string | null
+          preferred_time_slot?: string | null
+          property_count?: number | null
+          referral_code?: string | null
+          referred_by?: string | null
+          special_instructions?: string | null
+          total_bookings?: number | null
+          total_spent?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_details_referred_by_fkey"
+            columns: ["referred_by"]
+            isOneToOne: false
+            referencedRelation: "customer_details"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_notes: {
+        Row: {
+          admin_id: string
+          content: string
+          created_at: string
+          customer_id: string
+          id: string
+          is_resolved: boolean | null
+          note_type: string
+          priority: string | null
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          admin_id: string
+          content: string
+          created_at?: string
+          customer_id: string
+          id?: string
+          is_resolved?: boolean | null
+          note_type: string
+          priority?: string | null
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          admin_id?: string
+          content?: string
+          created_at?: string
+          customer_id?: string
+          id?: string
+          is_resolved?: boolean | null
+          note_type?: string
+          priority?: string | null
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_notes_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customer_details"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           address: string | null
@@ -127,6 +356,413 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      staff_availability: {
+        Row: {
+          created_at: string
+          day_of_week: number
+          end_time: string
+          id: string
+          is_available: boolean | null
+          staff_id: string
+          start_time: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: number
+          end_time: string
+          id?: string
+          is_available?: boolean | null
+          staff_id: string
+          start_time: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number
+          end_time?: string
+          id?: string
+          is_available?: boolean | null
+          staff_id?: string
+          start_time?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_availability_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_details"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_details: {
+        Row: {
+          average_rating: number | null
+          bank_account_name: string | null
+          bank_account_number: string | null
+          bank_bsb: string | null
+          created_at: string
+          date_of_birth: string | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          emergency_contact_relation: string | null
+          employee_id: string | null
+          employment_type: string | null
+          has_drivers_license: boolean | null
+          hire_date: string | null
+          hourly_rate: number | null
+          id: string
+          is_active: boolean | null
+          late_arrival_count: number | null
+          license_expiry: string | null
+          max_weekly_hours: number | null
+          no_show_count: number | null
+          notes: string | null
+          police_check_date: string | null
+          police_check_expiry: string | null
+          preferred_areas: string[] | null
+          rating_count: number | null
+          superannuation_fund: string | null
+          superannuation_member_number: string | null
+          tax_file_number: string | null
+          termination_date: string | null
+          total_earnings: number | null
+          total_hours_worked: number | null
+          total_tasks_completed: number | null
+          transport_type: string | null
+          uniform_size: string | null
+          updated_at: string
+          user_id: string
+          wwcc_expiry: string | null
+          wwcc_number: string | null
+        }
+        Insert: {
+          average_rating?: number | null
+          bank_account_name?: string | null
+          bank_account_number?: string | null
+          bank_bsb?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          emergency_contact_relation?: string | null
+          employee_id?: string | null
+          employment_type?: string | null
+          has_drivers_license?: boolean | null
+          hire_date?: string | null
+          hourly_rate?: number | null
+          id?: string
+          is_active?: boolean | null
+          late_arrival_count?: number | null
+          license_expiry?: string | null
+          max_weekly_hours?: number | null
+          no_show_count?: number | null
+          notes?: string | null
+          police_check_date?: string | null
+          police_check_expiry?: string | null
+          preferred_areas?: string[] | null
+          rating_count?: number | null
+          superannuation_fund?: string | null
+          superannuation_member_number?: string | null
+          tax_file_number?: string | null
+          termination_date?: string | null
+          total_earnings?: number | null
+          total_hours_worked?: number | null
+          total_tasks_completed?: number | null
+          transport_type?: string | null
+          uniform_size?: string | null
+          updated_at?: string
+          user_id: string
+          wwcc_expiry?: string | null
+          wwcc_number?: string | null
+        }
+        Update: {
+          average_rating?: number | null
+          bank_account_name?: string | null
+          bank_account_number?: string | null
+          bank_bsb?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          emergency_contact_relation?: string | null
+          employee_id?: string | null
+          employment_type?: string | null
+          has_drivers_license?: boolean | null
+          hire_date?: string | null
+          hourly_rate?: number | null
+          id?: string
+          is_active?: boolean | null
+          late_arrival_count?: number | null
+          license_expiry?: string | null
+          max_weekly_hours?: number | null
+          no_show_count?: number | null
+          notes?: string | null
+          police_check_date?: string | null
+          police_check_expiry?: string | null
+          preferred_areas?: string[] | null
+          rating_count?: number | null
+          superannuation_fund?: string | null
+          superannuation_member_number?: string | null
+          tax_file_number?: string | null
+          termination_date?: string | null
+          total_earnings?: number | null
+          total_hours_worked?: number | null
+          total_tasks_completed?: number | null
+          transport_type?: string | null
+          uniform_size?: string | null
+          updated_at?: string
+          user_id?: string
+          wwcc_expiry?: string | null
+          wwcc_number?: string | null
+        }
+        Relationships: []
+      }
+      staff_leave: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          end_date: string
+          id: string
+          leave_type: string
+          reason: string | null
+          rejection_reason: string | null
+          staff_id: string
+          start_date: string
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          end_date: string
+          id?: string
+          leave_type: string
+          reason?: string | null
+          rejection_reason?: string | null
+          staff_id: string
+          start_date: string
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          end_date?: string
+          id?: string
+          leave_type?: string
+          reason?: string | null
+          rejection_reason?: string | null
+          staff_id?: string
+          start_date?: string
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_leave_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_details"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_payroll: {
+        Row: {
+          bonus: number | null
+          bonus_reason: string | null
+          created_at: string
+          created_by: string
+          deductions: number | null
+          gross_pay: number
+          hourly_rate: number
+          hours_worked: number
+          id: string
+          net_pay: number
+          notes: string | null
+          pay_period_end: string
+          pay_period_start: string
+          payment_date: string | null
+          payment_reference: string | null
+          payment_status: string | null
+          staff_id: string
+          superannuation: number | null
+          tax_withheld: number | null
+          updated_at: string
+        }
+        Insert: {
+          bonus?: number | null
+          bonus_reason?: string | null
+          created_at?: string
+          created_by: string
+          deductions?: number | null
+          gross_pay: number
+          hourly_rate: number
+          hours_worked?: number
+          id?: string
+          net_pay: number
+          notes?: string | null
+          pay_period_end: string
+          pay_period_start: string
+          payment_date?: string | null
+          payment_reference?: string | null
+          payment_status?: string | null
+          staff_id: string
+          superannuation?: number | null
+          tax_withheld?: number | null
+          updated_at?: string
+        }
+        Update: {
+          bonus?: number | null
+          bonus_reason?: string | null
+          created_at?: string
+          created_by?: string
+          deductions?: number | null
+          gross_pay?: number
+          hourly_rate?: number
+          hours_worked?: number
+          id?: string
+          net_pay?: number
+          notes?: string | null
+          pay_period_end?: string
+          pay_period_start?: string
+          payment_date?: string | null
+          payment_reference?: string | null
+          payment_status?: string | null
+          staff_id?: string
+          superannuation?: number | null
+          tax_withheld?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_payroll_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_details"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_reviews: {
+        Row: {
+          admin_response: string | null
+          booking_id: string | null
+          comment: string | null
+          created_at: string
+          customer_id: string | null
+          id: string
+          is_public: boolean | null
+          professionalism_rating: number | null
+          punctuality_rating: number | null
+          quality_rating: number | null
+          rating: number
+          staff_id: string
+        }
+        Insert: {
+          admin_response?: string | null
+          booking_id?: string | null
+          comment?: string | null
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          is_public?: boolean | null
+          professionalism_rating?: number | null
+          punctuality_rating?: number | null
+          quality_rating?: number | null
+          rating: number
+          staff_id: string
+        }
+        Update: {
+          admin_response?: string | null
+          booking_id?: string | null
+          comment?: string | null
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          is_public?: boolean | null
+          professionalism_rating?: number | null
+          punctuality_rating?: number | null
+          quality_rating?: number | null
+          rating?: number
+          staff_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_reviews_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_reviews_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_details"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_skills: {
+        Row: {
+          certification_name: string | null
+          certification_number: string | null
+          created_at: string
+          expiry_date: string | null
+          id: string
+          is_verified: boolean | null
+          issued_date: string | null
+          skill_level: string | null
+          skill_name: string
+          staff_id: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          certification_name?: string | null
+          certification_number?: string | null
+          created_at?: string
+          expiry_date?: string | null
+          id?: string
+          is_verified?: boolean | null
+          issued_date?: string | null
+          skill_level?: string | null
+          skill_name: string
+          staff_id: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          certification_name?: string | null
+          certification_number?: string | null
+          created_at?: string
+          expiry_date?: string | null
+          id?: string
+          is_verified?: boolean | null
+          issued_date?: string | null
+          skill_level?: string | null
+          skill_name?: string
+          staff_id?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_skills_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_details"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       task_photos: {
         Row: {
