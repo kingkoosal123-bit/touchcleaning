@@ -34,25 +34,31 @@ const menuItems: MenuItem[] = [
     children: [
       { title: "All Bookings", path: "/admin/bookings" },
       { title: "Pending Bookings", path: "/admin/bookings?status=pending" },
-      { title: "Assign Staff", path: "/admin/assign" },
+      { title: "Assign Staff", path: "/admin/bookings/assign" },
     ],
   },
   {
-    title: "User Management",
+    title: "Customer Management",
     icon: Users,
     children: [
-      { title: "All Users", path: "/admin/users" },
-      { title: "Create Staff", path: "/admin/users/create-staff" },
-      { title: "Create Admin", path: "/admin/users/create-admin" },
+      { title: "Customer Database", path: "/admin/customers" },
     ],
   },
   {
     title: "Staff Management",
     icon: UserCog,
     children: [
-      { title: "Staff List", path: "/admin/staff" },
-      { title: "Staff Schedule", path: "/admin/staff/schedule" },
+      { title: "Staff Database", path: "/admin/staff" },
+      { title: "Create Staff", path: "/admin/users/create-staff" },
       { title: "Work Reports", path: "/admin/staff/reports" },
+    ],
+  },
+  {
+    title: "User Management",
+    icon: Building2,
+    children: [
+      { title: "All Users", path: "/admin/users" },
+      { title: "Create Admin", path: "/admin/users/create-admin" },
     ],
   },
   { title: "Reports & Analytics", icon: BarChart3, path: "/admin/analytics" },

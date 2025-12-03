@@ -20,6 +20,8 @@ import AdminAuth from "./pages/admin/AdminAuth";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminBookings from "./pages/admin/AdminBookings";
 import AdminUsers from "./pages/admin/AdminUsers";
+import AdminCustomers from "./pages/admin/AdminCustomers";
+import AdminStaff from "./pages/admin/AdminStaff";
 import CreateStaff from "./pages/admin/CreateStaff";
 import CreateAdmin from "./pages/admin/CreateAdmin";
 import AdminSEO from "./pages/admin/AdminSEO";
@@ -51,7 +53,11 @@ const App = () => (
             <Route path="/staff/dashboard" element={<ProtectedRoute><StaffDashboard /></ProtectedRoute>} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/bookings" element={<AdminBookings />} />
+            <Route path="/admin/bookings/assign" element={<AdminBookings />} />
             <Route path="/admin/users" element={<AdminUsers />} />
+            <Route path="/admin/customers" element={<AdminCustomers />} />
+            <Route path="/admin/staff" element={<AdminStaff />} />
+            <Route path="/admin/staff/reports" element={<AdminStaff />} />
             <Route path="/admin/users/create-staff" element={<CreateStaff />} />
             <Route path="/admin/users/create-admin" element={<CreateAdmin />} />
             <Route path="/admin/seo" element={<AdminSEO />} />

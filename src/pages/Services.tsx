@@ -13,6 +13,7 @@ const Services = () => {
     {
       icon: Building2,
       title: "Commercial Cleaning",
+      slug: "commercial",
       description: "Professional cleaning services for offices, retail spaces, and commercial properties. We understand the importance of maintaining a clean and professional environment for your business.",
       features: [
         "Office cleaning",
@@ -24,6 +25,7 @@ const Services = () => {
     {
       icon: Home,
       title: "Residential Cleaning",
+      slug: "residential",
       description: "Comprehensive home cleaning solutions tailored to your lifestyle. From regular maintenance to deep cleaning, we've got your home covered.",
       features: [
         "Regular house cleaning",
@@ -35,6 +37,7 @@ const Services = () => {
     {
       icon: Sparkles,
       title: "Deep Cleaning",
+      slug: "deep_clean",
       description: "Intensive cleaning services that go beyond surface-level maintenance. Perfect for seasonal refreshes or special occasions.",
       features: [
         "Kitchen deep clean",
@@ -46,6 +49,7 @@ const Services = () => {
     {
       icon: Wind,
       title: "Carpet & Upholstery",
+      slug: "carpet_clean",
       description: "Professional carpet and upholstery cleaning using advanced equipment and eco-friendly solutions to restore freshness.",
       features: [
         "Carpet steam cleaning",
@@ -57,6 +61,7 @@ const Services = () => {
     {
       icon: Droplets,
       title: "Window Cleaning",
+      slug: "window_clean",
       description: "Crystal-clear window cleaning services for both residential and commercial properties, ensuring streak-free shine.",
       features: [
         "Interior window cleaning",
@@ -67,13 +72,14 @@ const Services = () => {
     },
     {
       icon: Briefcase,
-      title: "Specialized Services",
-      description: "Custom cleaning solutions for unique requirements, including government projects and specialized facilities.",
+      title: "End of Lease",
+      slug: "end_of_lease",
+      description: "Thorough end of lease cleaning to ensure you get your bond back. We cover every detail required by property managers.",
       features: [
-        "Medical facility cleaning",
-        "School cleaning",
-        "Government projects",
-        "Event cleanup",
+        "Full property cleaning",
+        "Carpet steam cleaning",
+        "Oven & appliance cleaning",
+        "Window & blind cleaning",
       ],
     },
   ];
@@ -83,7 +89,7 @@ const Services = () => {
       <SEOHead page="services" />
       <Navbar />
       
-      <div className="pt-32 pb-20 px-4">
+      <div className="pt-40 pb-20 px-4">
         <div className="container mx-auto">
           {/* Header */}
           <div className="text-center mb-16 max-w-3xl mx-auto">
@@ -149,16 +155,16 @@ const Services = () => {
           {/* Services Grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
             {services.map((service, index) => (
-              <Card key={index} className="border-border hover:shadow-lg transition-all hover:-translate-y-1">
+              <Card key={index} className="border-border hover:shadow-lg transition-all hover:-translate-y-1 flex flex-col">
                 <CardHeader>
                   <div className="bg-primary/10 w-16 h-16 rounded-lg flex items-center justify-center mb-4">
                     <service.icon className="w-8 h-8 text-primary" />
                   </div>
                   <CardTitle className="text-2xl">{service.title}</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="flex-1 flex flex-col">
                   <p className="text-muted-foreground mb-6">{service.description}</p>
-                  <ul className="space-y-2">
+                  <ul className="space-y-2 mb-6">
                     {service.features.map((feature, idx) => (
                       <li key={idx} className="flex items-center text-sm text-foreground">
                         <div className="w-1.5 h-1.5 bg-primary rounded-full mr-3" />
@@ -166,6 +172,11 @@ const Services = () => {
                       </li>
                     ))}
                   </ul>
+                  <div className="mt-auto">
+                    <Button asChild className="w-full">
+                      <Link to={`/book?service=${service.slug}`}>Book Now</Link>
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))}
