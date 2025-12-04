@@ -33,7 +33,7 @@ const menuItems: MenuItem[] = [
     icon: Calendar,
     children: [
       { title: "All Bookings", path: "/admin/bookings" },
-      { title: "Pending Bookings", path: "/admin/bookings?status=pending" },
+      { title: "Create Booking", path: "/admin/bookings/create" },
       { title: "Assign Staff", path: "/admin/bookings/assign" },
     ],
   },
@@ -50,7 +50,7 @@ const menuItems: MenuItem[] = [
     children: [
       { title: "Staff Database", path: "/admin/staff" },
       { title: "Create Staff", path: "/admin/users/create-staff" },
-      { title: "Work Reports", path: "/admin/staff/reports" },
+      { title: "Payroll Management", path: "/admin/payroll" },
     ],
   },
   {
