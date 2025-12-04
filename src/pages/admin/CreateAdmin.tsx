@@ -6,8 +6,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Shield, ArrowLeft, AlertTriangle } from "lucide-react";
+import { Shield, ArrowLeft, AlertTriangle, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
@@ -18,9 +20,24 @@ const CreateAdmin = () => {
     password: "",
     fullName: "",
     phone: "",
+    adminLevel: "standard",
+    department: "",
+  });
+  const [permissions, setPermissions] = useState({
+    can_manage_bookings: true,
+    can_manage_staff: false,
+    can_manage_customers: true,
+    can_manage_payments: false,
+    can_manage_admins: false,
+    can_view_reports: true,
+    can_edit_settings: false,
   });
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  const handlePermissionChange = (key: keyof typeof permissions) => {
+    setPermissions(prev => ({ ...prev, [key]: !prev[key] }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,9 +74,29 @@ const CreateAdmin = () => {
           });
         }
 
+        // Update admin_details with permissions
+        const { error: detailsError } = await supabase
+          .from("admin_details")
+          .update({
+            admin_level: formData.adminLevel,
+            department: formData.department || null,
+            ...permissions,
+          })
+          .eq("user_id", data.user.id);
+
+        if (detailsError) {
+          // If update fails, try insert
+          await supabase.from("admin_details").insert({
+            user_id: data.user.id,
+            admin_level: formData.adminLevel,
+            department: formData.department || null,
+            ...permissions,
+          });
+        }
+
         toast({
           title: "Admin Created",
-          description: `Admin account for ${formData.fullName} has been created.`,
+          description: `Admin account for ${formData.fullName} has been created with selected permissions.`,
         });
         navigate("/admin/users");
       }
@@ -74,6 +111,16 @@ const CreateAdmin = () => {
     setIsLoading(false);
   };
 
+  const permissionsList = [
+    { key: "can_manage_bookings", label: "Manage Bookings", description: "View, create, and modify bookings" },
+    { key: "can_manage_staff", label: "Manage Staff", description: "Add, edit, and manage staff members" },
+    { key: "can_manage_customers", label: "Manage Customers", description: "View and manage customer accounts" },
+    { key: "can_manage_payments", label: "Manage Payments & Payroll", description: "Process payments and manage payroll" },
+    { key: "can_manage_admins", label: "Manage Admins", description: "Create and manage other admin accounts" },
+    { key: "can_view_reports", label: "View Reports", description: "Access analytics and reports" },
+    { key: "can_edit_settings", label: "Edit Settings", description: "Modify system settings" },
+  ];
+
   return (
     <AdminLayout>
       <div className="max-w-2xl mx-auto space-y-6">
@@ -85,7 +132,7 @@ const CreateAdmin = () => {
           </Button>
           <div>
             <h1 className="text-2xl font-bold">Create Admin Account</h1>
-            <p className="text-muted-foreground">Add a new administrator</p>
+            <p className="text-muted-foreground">Add a new administrator with custom permissions</p>
           </div>
         </div>
 
@@ -93,22 +140,22 @@ const CreateAdmin = () => {
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Warning</AlertTitle>
           <AlertDescription>
-            Admin accounts have full access to all system features and data. Only create admin accounts for trusted personnel.
+            Admin accounts have access to system features based on permissions. Only create admin accounts for trusted personnel.
           </AlertDescription>
         </Alert>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5" />
-              Admin Details
-            </CardTitle>
-            <CardDescription>
-              Enter the details for the new administrator.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                Admin Details
+              </CardTitle>
+              <CardDescription>
+                Enter the details for the new administrator.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="fullName">Full Name</Label>
@@ -129,6 +176,31 @@ const CreateAdmin = () => {
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     placeholder="+61 400 000 000"
                     required
+                  />
+                </div>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="adminLevel">Admin Level</Label>
+                  <Select value={formData.adminLevel} onValueChange={(v) => setFormData({ ...formData, adminLevel: v })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="standard">Standard Admin</SelectItem>
+                      <SelectItem value="manager">Manager</SelectItem>
+                      <SelectItem value="supervisor">Supervisor</SelectItem>
+                      <SelectItem value="super">Super Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="department">Department (Optional)</Label>
+                  <Input
+                    id="department"
+                    value={formData.department}
+                    onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                    placeholder="e.g., Operations"
                   />
                 </div>
               </div>
@@ -155,14 +227,44 @@ const CreateAdmin = () => {
                   required
                 />
               </div>
-              <div className="pt-4">
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Creating..." : "Create Admin Account"}
-                </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="h-5 w-5" />
+                Access Permissions
+              </CardTitle>
+              <CardDescription>
+                Select what this admin can access and manage.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {permissionsList.map((perm) => (
+                  <div key={perm.key} className="flex items-start space-x-3 p-3 rounded-lg border">
+                    <Checkbox
+                      id={perm.key}
+                      checked={permissions[perm.key as keyof typeof permissions]}
+                      onCheckedChange={() => handlePermissionChange(perm.key as keyof typeof permissions)}
+                    />
+                    <div className="space-y-1">
+                      <Label htmlFor={perm.key} className="font-medium cursor-pointer">
+                        {perm.label}
+                      </Label>
+                      <p className="text-sm text-muted-foreground">{perm.description}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
-            </form>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? "Creating..." : "Create Admin Account"}
+          </Button>
+        </form>
 
         <Card className="bg-muted/50">
           <CardContent className="pt-6">
