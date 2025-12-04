@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -6,8 +7,42 @@ import { Label } from "@/components/ui/label";
 import { Mail, Phone, MapPin, Clock } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const Contact = () => {
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    service: "",
+    message: "",
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    const { error } = await supabase.from("cms_enquiries").insert({
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone || null,
+      service_interest: formData.service || null,
+      message: formData.message,
+    });
+
+    if (error) {
+      toast.error("Failed to send message. Please try again.");
+      setLoading(false);
+      return;
+    }
+
+    toast.success("Message sent successfully! We'll get back to you soon.");
+    setFormData({ name: "", email: "", phone: "", service: "", message: "" });
+    setLoading(false);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -28,25 +63,25 @@ const Contact = () => {
             {/* Contact Form */}
             <Card className="border-border">
               <CardContent className="pt-8">
-                <form className="space-y-6">
+                <form className="space-y-6" onSubmit={handleSubmit}>
                   <div className="space-y-2">
                     <Label htmlFor="name">Full Name</Label>
-                    <Input id="name" placeholder="John Smith" />
+                    <Input id="name" placeholder="John Smith" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
                   </div>
                   
                   <div className="space-y-2">
                     <Label htmlFor="email">Email Address</Label>
-                    <Input id="email" type="email" placeholder="john@example.com" />
+                    <Input id="email" type="email" placeholder="john@example.com" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required />
                   </div>
                   
                   <div className="space-y-2">
                     <Label htmlFor="phone">Phone Number</Label>
-                    <Input id="phone" type="tel" placeholder="+61 XXX XXX XXX" />
+                    <Input id="phone" type="tel" placeholder="+61 XXX XXX XXX" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
                   </div>
                   
                   <div className="space-y-2">
                     <Label htmlFor="service">Service Interest</Label>
-                    <Input id="service" placeholder="e.g., Commercial Cleaning" />
+                    <Input id="service" placeholder="e.g., Commercial Cleaning" value={formData.service} onChange={(e) => setFormData({ ...formData, service: e.target.value })} />
                   </div>
                   
                   <div className="space-y-2">
@@ -55,11 +90,14 @@ const Contact = () => {
                       id="message" 
                       placeholder="Tell us about your cleaning needs..."
                       rows={5}
+                      value={formData.message}
+                      onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                      required
                     />
                   </div>
                   
-                  <Button type="submit" size="lg" className="w-full">
-                    Send Message
+                  <Button type="submit" size="lg" className="w-full" disabled={loading}>
+                    {loading ? "Sending..." : "Send Message"}
                   </Button>
                 </form>
               </CardContent>

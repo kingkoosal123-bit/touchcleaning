@@ -13,6 +13,12 @@ import {
   ChevronRight,
   LogOut,
   Building2,
+  Palette,
+  Globe,
+  Image,
+  Newspaper,
+  MessageSquare,
+  MapPin,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -42,6 +48,7 @@ const menuItems: MenuItem[] = [
     icon: Users,
     children: [
       { title: "Customer Database", path: "/admin/customers" },
+      { title: "Enquiries", path: "/admin/cms/enquiries" },
     ],
   },
   {
@@ -61,15 +68,26 @@ const menuItems: MenuItem[] = [
       { title: "Create Admin", path: "/admin/users/create-admin" },
     ],
   },
+  {
+    title: "CMS",
+    icon: Palette,
+    children: [
+      { title: "Services", path: "/admin/cms/services" },
+      { title: "Team Members", path: "/admin/cms/team" },
+      { title: "Locations", path: "/admin/cms/locations" },
+      { title: "Gallery", path: "/admin/cms/gallery" },
+      { title: "Blog Posts", path: "/admin/cms/blog" },
+      { title: "Site Settings", path: "/admin/cms/settings" },
+    ],
+  },
   { title: "Reports & Analytics", icon: BarChart3, path: "/admin/analytics" },
   { title: "SEO Settings", icon: FileText, path: "/admin/seo" },
-  { title: "General Settings", icon: Settings, path: "/admin/settings" },
 ];
 
 export const AdminSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [expandedItems, setExpandedItems] = useState<string[]>(["Booking Management", "User Management", "Staff Management"]);
+  const [expandedItems, setExpandedItems] = useState<string[]>(["Booking Management", "User Management", "Staff Management", "CMS"]);
 
   const toggleExpand = (title: string) => {
     setExpandedItems((prev) =>
