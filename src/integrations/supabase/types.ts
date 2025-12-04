@@ -194,6 +194,294 @@ export type Database = {
         }
         Relationships: []
       }
+      cms_blog_posts: {
+        Row: {
+          author_id: string | null
+          category: string
+          content: string | null
+          created_at: string
+          excerpt: string | null
+          id: string
+          image_url: string | null
+          is_featured: boolean | null
+          is_published: boolean | null
+          published_at: string | null
+          read_time: string | null
+          slug: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_id?: string | null
+          category: string
+          content?: string | null
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          image_url?: string | null
+          is_featured?: boolean | null
+          is_published?: boolean | null
+          published_at?: string | null
+          read_time?: string | null
+          slug: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string | null
+          category?: string
+          content?: string | null
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          image_url?: string | null
+          is_featured?: boolean | null
+          is_published?: boolean | null
+          published_at?: string | null
+          read_time?: string | null
+          slug?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      cms_enquiries: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          message: string
+          name: string
+          notes: string | null
+          phone: string | null
+          responded_at: string | null
+          responded_by: string | null
+          service_interest: string | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          message: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          responded_at?: string | null
+          responded_by?: string | null
+          service_interest?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          message?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          responded_at?: string | null
+          responded_by?: string | null
+          service_interest?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      cms_gallery: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          display_order: number | null
+          id: string
+          image_url: string
+          is_active: boolean | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          image_url: string
+          is_active?: boolean | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          image_url?: string
+          is_active?: boolean | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      cms_locations: {
+        Row: {
+          area_name: string
+          created_at: string
+          description: string | null
+          display_order: number | null
+          id: string
+          is_active: boolean | null
+          suburbs: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          area_name: string
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          suburbs?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          area_name?: string
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          suburbs?: string[] | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      cms_services: {
+        Row: {
+          created_at: string
+          description: string
+          display_order: number | null
+          features: string[] | null
+          icon: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          is_featured: boolean | null
+          short_description: string | null
+          slug: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          display_order?: number | null
+          features?: string[] | null
+          icon?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          short_description?: string | null
+          slug: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          display_order?: number | null
+          features?: string[] | null
+          icon?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          short_description?: string | null
+          slug?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      cms_site_settings: {
+        Row: {
+          category: string | null
+          created_at: string
+          id: string
+          setting_key: string
+          setting_value: Json
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          setting_key: string
+          setting_value?: Json
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          setting_key?: string
+          setting_value?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      cms_team_members: {
+        Row: {
+          bio: string | null
+          created_at: string
+          display_order: number | null
+          email: string | null
+          expertise: string[] | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          is_leadership: boolean | null
+          linkedin_url: string | null
+          name: string
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string
+          display_order?: number | null
+          email?: string | null
+          expertise?: string[] | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          is_leadership?: boolean | null
+          linkedin_url?: string | null
+          name: string
+          role: string
+          updated_at?: string
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string
+          display_order?: number | null
+          email?: string | null
+          expertise?: string[] | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          is_leadership?: boolean | null
+          linkedin_url?: string | null
+          name?: string
+          role?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       customer_details: {
         Row: {
           access_instructions: string | null

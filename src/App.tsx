@@ -29,6 +29,13 @@ import AdminPayroll from "./pages/admin/AdminPayroll";
 import AdminSEO from "./pages/admin/AdminSEO";
 import StaffDashboard from "./pages/staff/StaffDashboard";
 import CustomerDashboard from "./pages/customer/CustomerDashboard";
+import AdminCMSServices from "./pages/admin/cms/AdminCMSServices";
+import AdminCMSTeam from "./pages/admin/cms/AdminCMSTeam";
+import AdminCMSLocations from "./pages/admin/cms/AdminCMSLocations";
+import AdminCMSGallery from "./pages/admin/cms/AdminCMSGallery";
+import AdminCMSBlog from "./pages/admin/cms/AdminCMSBlog";
+import AdminCMSEnquiries from "./pages/admin/cms/AdminCMSEnquiries";
+import AdminCMSSettings from "./pages/admin/cms/AdminCMSSettings";
 
 const queryClient = new QueryClient();
 
@@ -64,6 +71,13 @@ const App = () => (
             <Route path="/admin/users/create-staff" element={<CreateStaff />} />
             <Route path="/admin/users/create-admin" element={<CreateAdmin />} />
             <Route path="/admin/seo" element={<AdminSEO />} />
+            <Route path="/admin/cms/services" element={<AdminCMSServices />} />
+            <Route path="/admin/cms/team" element={<AdminCMSTeam />} />
+            <Route path="/admin/cms/locations" element={<AdminCMSLocations />} />
+            <Route path="/admin/cms/gallery" element={<AdminCMSGallery />} />
+            <Route path="/admin/cms/blog" element={<AdminCMSBlog />} />
+            <Route path="/admin/cms/enquiries" element={<AdminCMSEnquiries />} />
+            <Route path="/admin/cms/settings" element={<AdminCMSSettings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
