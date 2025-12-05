@@ -9,9 +9,19 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { z } from "zod";
+
+const contactSchema = z.object({
+  name: z.string().trim().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
+  email: z.string().trim().email("Please enter a valid email address").max(255, "Email must be less than 255 characters"),
+  phone: z.string().trim().max(20, "Phone number must be less than 20 characters").optional().or(z.literal("")),
+  service: z.string().trim().max(100, "Service interest must be less than 100 characters").optional().or(z.literal("")),
+  message: z.string().trim().min(1, "Message is required").max(2000, "Message must be less than 2000 characters"),
+});
 
 const Contact = () => {
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -22,14 +32,30 @@ const Contact = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrors({});
+    
+    const validation = contactSchema.safeParse(formData);
+    
+    if (!validation.success) {
+      const fieldErrors: Record<string, string> = {};
+      validation.error.errors.forEach((err) => {
+        if (err.path[0]) {
+          fieldErrors[err.path[0] as string] = err.message;
+        }
+      });
+      setErrors(fieldErrors);
+      toast.error("Please fix the form errors before submitting.");
+      return;
+    }
+
     setLoading(true);
 
     const { error } = await supabase.from("cms_enquiries").insert({
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone || null,
-      service_interest: formData.service || null,
-      message: formData.message,
+      name: validation.data.name,
+      email: validation.data.email,
+      phone: validation.data.phone || null,
+      service_interest: validation.data.service || null,
+      message: validation.data.message,
     });
 
     if (error) {
@@ -66,22 +92,26 @@ const Contact = () => {
                 <form className="space-y-6" onSubmit={handleSubmit}>
                   <div className="space-y-2">
                     <Label htmlFor="name">Full Name</Label>
-                    <Input id="name" placeholder="John Smith" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
+                    <Input id="name" placeholder="John Smith" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
+                    {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
                   </div>
                   
                   <div className="space-y-2">
                     <Label htmlFor="email">Email Address</Label>
-                    <Input id="email" type="email" placeholder="john@example.com" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required />
+                    <Input id="email" type="email" placeholder="john@example.com" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
+                    {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
                   </div>
                   
                   <div className="space-y-2">
                     <Label htmlFor="phone">Phone Number</Label>
                     <Input id="phone" type="tel" placeholder="+61 XXX XXX XXX" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
+                    {errors.phone && <p className="text-sm text-destructive">{errors.phone}</p>}
                   </div>
                   
                   <div className="space-y-2">
                     <Label htmlFor="service">Service Interest</Label>
                     <Input id="service" placeholder="e.g., Commercial Cleaning" value={formData.service} onChange={(e) => setFormData({ ...formData, service: e.target.value })} />
+                    {errors.service && <p className="text-sm text-destructive">{errors.service}</p>}
                   </div>
                   
                   <div className="space-y-2">
@@ -92,8 +122,8 @@ const Contact = () => {
                       rows={5}
                       value={formData.message}
                       onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                      required
                     />
+                    {errors.message && <p className="text-sm text-destructive">{errors.message}</p>}
                   </div>
                   
                   <Button type="submit" size="lg" className="w-full" disabled={loading}>
