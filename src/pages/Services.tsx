@@ -1,88 +1,130 @@
 import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, Home, Sparkles, Wind, Droplets, Briefcase } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { SEOHead } from "@/components/SEOHead";
-import residentialImage from "@/assets/residential-clean.jpg";
-import commercialImage from "@/assets/commercial-clean.jpg";
+import { supabase } from "@/integrations/supabase/client";
+
+// Icon mapping for services
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  Building2,
+  Home,
+  Sparkles,
+  Wind,
+  Droplets,
+  Briefcase,
+};
+
+interface CMSService {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  short_description: string | null;
+  features: string[] | null;
+  icon: string | null;
+  image_url: string | null;
+  is_featured: boolean | null;
+}
 
 const Services = () => {
-  const services = [
+  const [services, setServices] = useState<CMSService[]>([]);
+  const [featuredServices, setFeaturedServices] = useState<CMSService[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchServices = async () => {
+      const { data, error } = await supabase
+        .from("cms_services")
+        .select("*")
+        .eq("is_active", true)
+        .order("display_order", { ascending: true });
+
+      if (!error && data) {
+        setServices(data);
+        setFeaturedServices(data.filter(s => s.is_featured));
+      }
+      setLoading(false);
+    };
+
+    fetchServices();
+  }, []);
+
+  // Fallback services if CMS is empty
+  const fallbackServices: CMSService[] = [
     {
-      icon: Building2,
+      id: "1",
+      icon: "Building2",
       title: "Commercial Cleaning",
       slug: "commercial",
       description: "Professional cleaning services for offices, retail spaces, and commercial properties. We understand the importance of maintaining a clean and professional environment for your business.",
-      features: [
-        "Office cleaning",
-        "Retail space maintenance",
-        "Industrial cleaning",
-        "Post-construction cleanup",
-      ],
+      short_description: null,
+      features: ["Office cleaning", "Retail space maintenance", "Industrial cleaning", "Post-construction cleanup"],
+      image_url: null,
+      is_featured: true,
     },
     {
-      icon: Home,
+      id: "2",
+      icon: "Home",
       title: "Residential Cleaning",
       slug: "residential",
       description: "Comprehensive home cleaning solutions tailored to your lifestyle. From regular maintenance to deep cleaning, we've got your home covered.",
-      features: [
-        "Regular house cleaning",
-        "Deep cleaning services",
-        "Move in/out cleaning",
-        "Spring cleaning",
-      ],
+      short_description: null,
+      features: ["Regular house cleaning", "Deep cleaning services", "Move in/out cleaning", "Spring cleaning"],
+      image_url: null,
+      is_featured: true,
     },
     {
-      icon: Sparkles,
+      id: "3",
+      icon: "Sparkles",
       title: "Deep Cleaning",
       slug: "deep_clean",
       description: "Intensive cleaning services that go beyond surface-level maintenance. Perfect for seasonal refreshes or special occasions.",
-      features: [
-        "Kitchen deep clean",
-        "Bathroom sanitization",
-        "Appliance cleaning",
-        "Detailed dusting",
-      ],
+      short_description: null,
+      features: ["Kitchen deep clean", "Bathroom sanitization", "Appliance cleaning", "Detailed dusting"],
+      image_url: null,
+      is_featured: false,
     },
     {
-      icon: Wind,
+      id: "4",
+      icon: "Wind",
       title: "Carpet & Upholstery",
       slug: "carpet_clean",
       description: "Professional carpet and upholstery cleaning using advanced equipment and eco-friendly solutions to restore freshness.",
-      features: [
-        "Carpet steam cleaning",
-        "Stain removal",
-        "Upholstery cleaning",
-        "Odor elimination",
-      ],
+      short_description: null,
+      features: ["Carpet steam cleaning", "Stain removal", "Upholstery cleaning", "Odor elimination"],
+      image_url: null,
+      is_featured: false,
     },
     {
-      icon: Droplets,
+      id: "5",
+      icon: "Droplets",
       title: "Window Cleaning",
       slug: "window_clean",
       description: "Crystal-clear window cleaning services for both residential and commercial properties, ensuring streak-free shine.",
-      features: [
-        "Interior window cleaning",
-        "Exterior window cleaning",
-        "High-rise window access",
-        "Screen cleaning",
-      ],
+      short_description: null,
+      features: ["Interior window cleaning", "Exterior window cleaning", "High-rise window access", "Screen cleaning"],
+      image_url: null,
+      is_featured: false,
     },
     {
-      icon: Briefcase,
+      id: "6",
+      icon: "Briefcase",
       title: "End of Lease",
       slug: "end_of_lease",
       description: "Thorough end of lease cleaning to ensure you get your bond back. We cover every detail required by property managers.",
-      features: [
-        "Full property cleaning",
-        "Carpet steam cleaning",
-        "Oven & appliance cleaning",
-        "Window & blind cleaning",
-      ],
+      short_description: null,
+      features: ["Full property cleaning", "Carpet steam cleaning", "Oven & appliance cleaning", "Window & blind cleaning"],
+      image_url: null,
+      is_featured: false,
     },
   ];
+
+  const displayServices = services.length > 0 ? services : fallbackServices;
+  const displayFeatured = featuredServices.length > 0 ? featuredServices : fallbackServices.filter(s => s.is_featured);
 
   return (
     <div className="min-h-screen bg-background">
@@ -102,85 +144,107 @@ const Services = () => {
           </div>
 
           {/* Featured Services with Images */}
-          <div className="grid md:grid-cols-2 gap-8 mb-16">
-            <Card className="overflow-hidden hover:shadow-lg transition-all">
-              <div className="h-64 overflow-hidden">
-                <img 
-                  src={residentialImage} 
-                  alt="Residential cleaning services" 
-                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                />
-              </div>
-              <CardHeader>
-                <CardTitle className="flex items-center text-2xl">
-                  <Home className="mr-2 h-6 w-6 text-primary" />
-                  Residential Cleaning
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground mb-4">
-                  Transform your home with our comprehensive residential cleaning services. Professional, reliable, and tailored to your lifestyle.
-                </p>
-                <Button asChild>
-                  <Link to="/contact">Get a Quote</Link>
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card className="overflow-hidden hover:shadow-lg transition-all">
-              <div className="h-64 overflow-hidden">
-                <img 
-                  src={commercialImage} 
-                  alt="Commercial cleaning services" 
-                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                />
-              </div>
-              <CardHeader>
-                <CardTitle className="flex items-center text-2xl">
-                  <Building2 className="mr-2 h-6 w-6 text-secondary" />
-                  Commercial Cleaning
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground mb-4">
-                  Maintain a professional environment with our commercial cleaning solutions. Trusted by 500+ businesses across Sydney.
-                </p>
-                <Button asChild>
-                  <Link to="/contact">Get a Quote</Link>
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
+          {displayFeatured.length > 0 && (
+            <div className="grid md:grid-cols-2 gap-8 mb-16">
+              {displayFeatured.slice(0, 2).map((service) => {
+                const IconComponent = iconMap[service.icon || "Sparkles"] || Sparkles;
+                return (
+                  <Card key={service.id} className="overflow-hidden hover:shadow-lg transition-all">
+                    <div className="h-64 overflow-hidden">
+                      {service.image_url ? (
+                        <img 
+                          src={service.image_url} 
+                          alt={service.title}
+                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-primary/20 via-accent/10 to-muted flex items-center justify-center">
+                          <IconComponent className="w-20 h-20 text-primary/40" />
+                        </div>
+                      )}
+                    </div>
+                    <CardHeader>
+                      <CardTitle className="flex items-center text-2xl">
+                        <IconComponent className="mr-2 h-6 w-6 text-primary" />
+                        {service.title}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-muted-foreground mb-4">
+                        {service.short_description || service.description.slice(0, 150) + "..."}
+                      </p>
+                      <Button asChild>
+                        <Link to="/contact">Get a Quote</Link>
+                      </Button>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
 
           {/* Services Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-            {services.map((service, index) => (
-              <Card key={index} className="border-border hover:shadow-lg transition-all hover:-translate-y-1 flex flex-col">
-                <CardHeader>
-                  <div className="bg-primary/10 w-16 h-16 rounded-lg flex items-center justify-center mb-4">
-                    <service.icon className="w-8 h-8 text-primary" />
-                  </div>
-                  <CardTitle className="text-2xl">{service.title}</CardTitle>
-                </CardHeader>
-                <CardContent className="flex-1 flex flex-col">
-                  <p className="text-muted-foreground mb-6">{service.description}</p>
-                  <ul className="space-y-2 mb-6">
-                    {service.features.map((feature, idx) => (
-                      <li key={idx} className="flex items-center text-sm text-foreground">
-                        <div className="w-1.5 h-1.5 bg-primary rounded-full mr-3" />
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="mt-auto">
-                    <Button asChild className="w-full">
-                      <Link to={`/book?service=${service.slug}`}>Book Now</Link>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          {loading ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+              {Array(6).fill(0).map((_, index) => (
+                <Card key={index} className="border-border animate-pulse">
+                  <CardHeader>
+                    <div className="bg-muted w-16 h-16 rounded-lg mb-4" />
+                    <div className="bg-muted h-8 w-3/4 rounded" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="bg-muted h-24 rounded mb-4" />
+                    <div className="bg-muted h-10 rounded" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+              {displayServices.map((service) => {
+                const IconComponent = iconMap[service.icon || "Sparkles"] || Sparkles;
+                return (
+                  <Card key={service.id} className="border-border hover:shadow-lg transition-all hover:-translate-y-1 flex flex-col">
+                    {service.image_url && (
+                      <div className="h-48 overflow-hidden">
+                        <img 
+                          src={service.image_url} 
+                          alt={service.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+                    <CardHeader>
+                      {!service.image_url && (
+                        <div className="bg-primary/10 w-16 h-16 rounded-lg flex items-center justify-center mb-4">
+                          <IconComponent className="w-8 h-8 text-primary" />
+                        </div>
+                      )}
+                      <CardTitle className="text-2xl">{service.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex-1 flex flex-col">
+                      <p className="text-muted-foreground mb-6">{service.description}</p>
+                      {service.features && service.features.length > 0 && (
+                        <ul className="space-y-2 mb-6">
+                          {service.features.map((feature, idx) => (
+                            <li key={idx} className="flex items-center text-sm text-foreground">
+                              <div className="w-1.5 h-1.5 bg-primary rounded-full mr-3" />
+                              {feature}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      <div className="mt-auto">
+                        <Button asChild className="w-full">
+                          <Link to={`/book?service=${service.slug}`}>Book Now</Link>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
 
           {/* CTA Section */}
           <div className="bg-muted rounded-2xl p-12 text-center">
