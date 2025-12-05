@@ -1,63 +1,100 @@
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Mail, Linkedin } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { supabase } from "@/integrations/supabase/client";
+
+interface TeamMember {
+  id: string;
+  name: string;
+  role: string;
+  bio: string | null;
+  image_url: string | null;
+  email: string | null;
+  linkedin_url: string | null;
+  expertise: string[] | null;
+  is_leadership: boolean | null;
+}
 
 const Team = () => {
-  const leadership = [
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTeamMembers = async () => {
+      const { data, error } = await supabase
+        .from("cms_team_members")
+        .select("*")
+        .eq("is_active", true)
+        .order("display_order", { ascending: true });
+
+      if (!error && data) {
+        setTeamMembers(data);
+      }
+      setLoading(false);
+    };
+
+    fetchTeamMembers();
+  }, []);
+
+  const leadership = teamMembers.filter(member => member.is_leadership);
+  const coreTeam = teamMembers.filter(member => !member.is_leadership);
+
+  // Fallback data if CMS is empty
+  const fallbackLeadership: TeamMember[] = [
     {
+      id: "1",
       name: "Sarah Mitchell",
       role: "Founder & CEO",
       bio: "With over 15 years in the cleaning industry, Sarah founded Touch Cleaning with a vision to deliver exceptional service across Sydney.",
       expertise: ["Business Strategy", "Client Relations", "Quality Management"],
+      image_url: null,
+      email: null,
+      linkedin_url: null,
+      is_leadership: true,
     },
     {
+      id: "2",
       name: "James Chen",
       role: "Operations Director",
       bio: "James oversees all operational aspects, ensuring every project meets our high standards of excellence.",
       expertise: ["Operations", "Team Leadership", "Process Optimization"],
-    },
-    {
-      name: "Emma Thompson",
-      role: "Head of Commercial Services",
-      bio: "Leading our commercial division, Emma has secured contracts with major corporations and government agencies.",
-      expertise: ["Commercial Cleaning", "Contract Management", "B2B Relations"],
+      image_url: null,
+      email: null,
+      linkedin_url: null,
+      is_leadership: true,
     },
   ];
 
-  const team = [
+  const fallbackTeam: TeamMember[] = [
     {
+      id: "3",
       name: "Michael Roberts",
       role: "Senior Cleaning Specialist",
-      specialization: "Commercial Projects",
+      bio: "Specializes in Commercial Projects",
+      expertise: null,
+      image_url: null,
+      email: null,
+      linkedin_url: null,
+      is_leadership: false,
     },
     {
+      id: "4",
       name: "Lisa Anderson",
       role: "Residential Services Manager",
-      specialization: "Luxury Homes",
-    },
-    {
-      name: "David Kim",
-      role: "Technical Specialist",
-      specialization: "Industrial Cleaning",
-    },
-    {
-      name: "Rachel Martinez",
-      role: "Quality Assurance Lead",
-      specialization: "Standards & Compliance",
-    },
-    {
-      name: "Tom Wilson",
-      role: "Customer Success Manager",
-      specialization: "Client Experience",
-    },
-    {
-      name: "Sophie Taylor",
-      role: "Training Coordinator",
-      specialization: "Staff Development",
+      bio: "Specializes in Luxury Homes",
+      expertise: null,
+      image_url: null,
+      email: null,
+      linkedin_url: null,
+      is_leadership: false,
     },
   ];
+
+  const displayLeadership = leadership.length > 0 ? leadership : fallbackLeadership;
+  const displayTeam = coreTeam.length > 0 ? coreTeam : fallbackTeam;
 
   const values = [
     {
@@ -99,67 +136,146 @@ const Team = () => {
             <h2 className="text-3xl font-bold text-foreground mb-8 text-center">
               Leadership Team
             </h2>
-            <div className="grid md:grid-cols-3 gap-8">
-              {leadership.map((member, index) => (
-                <Card key={index} className="border-border hover:shadow-lg transition-all">
-                  <div className="aspect-square bg-gradient-to-br from-primary/20 via-accent/10 to-muted flex items-center justify-center">
-                    <div className="text-8xl font-bold text-primary/40">
-                      {member.name.split(' ').map(n => n[0]).join('')}
+            {loading ? (
+              <div className="grid md:grid-cols-3 gap-8">
+                {Array(3).fill(0).map((_, index) => (
+                  <Card key={index} className="border-border animate-pulse">
+                    <div className="aspect-square bg-muted" />
+                    <CardContent className="pt-6">
+                      <div className="bg-muted h-8 w-3/4 mb-2 rounded" />
+                      <div className="bg-muted h-6 w-1/2 mb-4 rounded" />
+                      <div className="bg-muted h-20 rounded" />
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-3 gap-8">
+                {displayLeadership.map((member) => (
+                  <Card key={member.id} className="border-border hover:shadow-lg transition-all">
+                    <div className="aspect-square overflow-hidden">
+                      {member.image_url ? (
+                        <img 
+                          src={member.image_url} 
+                          alt={member.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-primary/20 via-accent/10 to-muted flex items-center justify-center">
+                          <div className="text-8xl font-bold text-primary/40">
+                            {member.name.split(' ').map(n => n[0]).join('')}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                  <CardContent className="pt-6">
-                    <h3 className="text-2xl font-bold text-foreground mb-1">
-                      {member.name}
-                    </h3>
-                    <p className="text-primary font-semibold mb-4">{member.role}</p>
-                    <p className="text-muted-foreground mb-4">{member.bio}</p>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {member.expertise.map((skill, idx) => (
-                        <Badge key={idx} variant="secondary">
-                          {skill}
-                        </Badge>
-                      ))}
-                    </div>
-                    <div className="flex gap-3">
-                      <button className="text-muted-foreground hover:text-primary transition-colors">
-                        <Mail className="w-5 h-5" />
-                      </button>
-                      <button className="text-muted-foreground hover:text-primary transition-colors">
-                        <Linkedin className="w-5 h-5" />
-                      </button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                    <CardContent className="pt-6">
+                      <h3 className="text-2xl font-bold text-foreground mb-1">
+                        {member.name}
+                      </h3>
+                      <p className="text-primary font-semibold mb-4">{member.role}</p>
+                      {member.bio && (
+                        <p className="text-muted-foreground mb-4">{member.bio}</p>
+                      )}
+                      {member.expertise && member.expertise.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          {member.expertise.map((skill, idx) => (
+                            <Badge key={idx} variant="secondary">
+                              {skill}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                      <div className="flex gap-3">
+                        {member.email && (
+                          <a 
+                            href={`mailto:${member.email}`}
+                            className="text-muted-foreground hover:text-primary transition-colors"
+                          >
+                            <Mail className="w-5 h-5" />
+                          </a>
+                        )}
+                        {member.linkedin_url && (
+                          <a 
+                            href={member.linkedin_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-muted-foreground hover:text-primary transition-colors"
+                          >
+                            <Linkedin className="w-5 h-5" />
+                          </a>
+                        )}
+                        {!member.email && !member.linkedin_url && (
+                          <>
+                            <button className="text-muted-foreground hover:text-primary transition-colors">
+                              <Mail className="w-5 h-5" />
+                            </button>
+                            <button className="text-muted-foreground hover:text-primary transition-colors">
+                              <Linkedin className="w-5 h-5" />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Core Team */}
-          <div className="mb-20">
-            <h2 className="text-3xl font-bold text-foreground mb-8 text-center">
-              Our Core Team
-            </h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {team.map((member, index) => (
-                <Card key={index} className="border-border hover:shadow-lg transition-all">
-                  <div className="aspect-video bg-gradient-to-br from-primary/10 via-accent/5 to-muted flex items-center justify-center">
-                    <div className="text-6xl font-bold text-primary/30">
-                      {member.name.split(' ').map(n => n[0]).join('')}
-                    </div>
-                  </div>
-                  <CardContent className="pt-6">
-                    <h3 className="text-xl font-bold text-foreground mb-1">
-                      {member.name}
-                    </h3>
-                    <p className="text-primary font-semibold mb-2">{member.role}</p>
-                    <p className="text-sm text-muted-foreground">
-                      Specializes in {member.specialization}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
+          {(displayTeam.length > 0 || loading) && (
+            <div className="mb-20">
+              <h2 className="text-3xl font-bold text-foreground mb-8 text-center">
+                Our Core Team
+              </h2>
+              {loading ? (
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {Array(6).fill(0).map((_, index) => (
+                    <Card key={index} className="border-border animate-pulse">
+                      <div className="aspect-video bg-muted" />
+                      <CardContent className="pt-6">
+                        <div className="bg-muted h-6 w-3/4 mb-2 rounded" />
+                        <div className="bg-muted h-5 w-1/2 rounded" />
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {displayTeam.map((member) => (
+                    <Card key={member.id} className="border-border hover:shadow-lg transition-all">
+                      <div className="aspect-video overflow-hidden">
+                        {member.image_url ? (
+                          <img 
+                            src={member.image_url} 
+                            alt={member.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-primary/10 via-accent/5 to-muted flex items-center justify-center">
+                            <div className="text-6xl font-bold text-primary/30">
+                              {member.name.split(' ').map(n => n[0]).join('')}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <CardContent className="pt-6">
+                        <h3 className="text-xl font-bold text-foreground mb-1">
+                          {member.name}
+                        </h3>
+                        <p className="text-primary font-semibold mb-2">{member.role}</p>
+                        {member.bio && (
+                          <p className="text-sm text-muted-foreground">
+                            {member.bio}
+                          </p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
+          )}
 
           {/* Values */}
           <div className="mb-20">

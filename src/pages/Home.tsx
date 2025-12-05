@@ -1,31 +1,59 @@
 import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Sparkles, Shield, Users, Award, CheckCircle, ArrowRight } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { SEOHead } from "@/components/SEOHead";
+import { supabase } from "@/integrations/supabase/client";
 import heroImage from "@/assets/hero-cleaning.jpg";
 import teamImage from "@/assets/team-cleaning.jpg";
 
+// Icon mapping for services
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  Sparkles,
+  Shield,
+  Users,
+  Award,
+  Building2: Sparkles,
+  Home: Shield,
+  Wind: Sparkles,
+  Droplets: Sparkles,
+  Briefcase: Sparkles,
+};
+
+interface CMSService {
+  id: string;
+  title: string;
+  short_description: string | null;
+  description: string;
+  icon: string | null;
+  slug: string;
+  image_url: string | null;
+}
+
 const Home = () => {
-  const services = [
-    {
-      icon: Sparkles,
-      title: "Commercial Cleaning",
-      description: "Professional cleaning solutions for offices, retail spaces, and commercial properties.",
-    },
-    {
-      icon: Shield,
-      title: "Residential Cleaning",
-      description: "Quality home cleaning services tailored to your lifestyle and schedule.",
-    },
-    {
-      icon: Users,
-      title: "Specialized Services",
-      description: "Deep cleaning, carpet cleaning, window cleaning, and more specialized solutions.",
-    },
-  ];
+  const [services, setServices] = useState<CMSService[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchServices = async () => {
+      const { data, error } = await supabase
+        .from("cms_services")
+        .select("id, title, short_description, description, icon, slug, image_url")
+        .eq("is_active", true)
+        .order("display_order", { ascending: true })
+        .limit(3);
+
+      if (!error && data) {
+        setServices(data);
+      }
+      setLoading(false);
+    };
+
+    fetchServices();
+  }, []);
 
   const stats = [
     { number: "500+", label: "Satisfied Clients" },
@@ -42,6 +70,39 @@ const Home = () => {
     "Insured and bonded services",
     "Quality guaranteed results",
   ];
+
+  // Fallback services if CMS is empty
+  const fallbackServices = [
+    {
+      id: "1",
+      icon: "Sparkles",
+      title: "Commercial Cleaning",
+      short_description: "Professional cleaning solutions for offices, retail spaces, and commercial properties.",
+      description: "",
+      slug: "commercial",
+      image_url: null,
+    },
+    {
+      id: "2",
+      icon: "Shield",
+      title: "Residential Cleaning",
+      short_description: "Quality home cleaning services tailored to your lifestyle and schedule.",
+      description: "",
+      slug: "residential",
+      image_url: null,
+    },
+    {
+      id: "3",
+      icon: "Users",
+      title: "Specialized Services",
+      short_description: "Deep cleaning, carpet cleaning, window cleaning, and more specialized solutions.",
+      description: "",
+      slug: "deep_clean",
+      image_url: null,
+    },
+  ];
+
+  const displayServices = services.length > 0 ? services : fallbackServices;
 
   return (
     <div className="min-h-screen bg-background">
@@ -106,25 +167,60 @@ const Home = () => {
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {services.map((service, index) => (
-              <Card key={index} className="border-border hover:shadow-lg transition-shadow">
-                <CardContent className="pt-8">
-                  <div className="bg-primary/10 w-16 h-16 rounded-lg flex items-center justify-center mb-6">
-                    <service.icon className="w-8 h-8 text-primary" />
-                  </div>
-                  <h3 className="text-2xl font-semibold text-foreground mb-4">
-                    {service.title}
-                  </h3>
-                  <p className="text-muted-foreground mb-6">{service.description}</p>
-                  <Link
-                    to="/services"
-                    className="text-primary font-medium inline-flex items-center hover:gap-2 transition-all"
-                  >
-                    Learn More <ArrowRight className="ml-1 w-4 h-4" />
-                  </Link>
-                </CardContent>
-              </Card>
-            ))}
+            {loading ? (
+              Array(3).fill(0).map((_, index) => (
+                <Card key={index} className="border-border animate-pulse">
+                  <CardContent className="pt-8">
+                    <div className="bg-muted w-16 h-16 rounded-lg mb-6" />
+                    <div className="bg-muted h-8 w-3/4 mb-4 rounded" />
+                    <div className="bg-muted h-20 rounded" />
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              displayServices.map((service) => {
+                const IconComponent = iconMap[service.icon || "Sparkles"] || Sparkles;
+                return (
+                  <Card key={service.id} className="border-border hover:shadow-lg transition-shadow">
+                    <CardContent className="pt-8">
+                      {service.image_url ? (
+                        <div className="w-full h-40 rounded-lg mb-6 overflow-hidden">
+                          <img 
+                            src={service.image_url} 
+                            alt={service.title}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <div className="bg-primary/10 w-16 h-16 rounded-lg flex items-center justify-center mb-6">
+                          <IconComponent className="w-8 h-8 text-primary" />
+                        </div>
+                      )}
+                      <h3 className="text-2xl font-semibold text-foreground mb-4">
+                        {service.title}
+                      </h3>
+                      <p className="text-muted-foreground mb-6">
+                        {service.short_description || service.description}
+                      </p>
+                      <Link
+                        to={`/services`}
+                        className="text-primary font-medium inline-flex items-center hover:gap-2 transition-all"
+                      >
+                        Learn More <ArrowRight className="ml-1 w-4 h-4" />
+                      </Link>
+                    </CardContent>
+                  </Card>
+                );
+              })
+            )}
+          </div>
+
+          <div className="text-center mt-12">
+            <Button asChild size="lg" variant="outline">
+              <Link to="/services">
+                See All Services <ArrowRight className="ml-2 w-4 h-4" />
+              </Link>
+            </Button>
           </div>
         </div>
       </section>
