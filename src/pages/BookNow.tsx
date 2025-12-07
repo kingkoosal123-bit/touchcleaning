@@ -16,6 +16,16 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { z } from "zod";
+
+const bookingSchema = z.object({
+  firstName: z.string().trim().min(1, "First name is required").max(50, "First name must be less than 50 characters"),
+  lastName: z.string().trim().min(1, "Last name is required").max(50, "Last name must be less than 50 characters"),
+  email: z.string().trim().email("Invalid email address").max(255, "Email must be less than 255 characters"),
+  phone: z.string().trim().min(1, "Phone is required").max(20, "Phone must be less than 20 characters"),
+  address: z.string().trim().min(1, "Address is required").max(500, "Address must be less than 500 characters"),
+  notes: z.string().max(2000, "Notes must be less than 2000 characters").optional(),
+});
 
 const BookNow = () => {
   const [searchParams] = useSearchParams();
@@ -23,6 +33,7 @@ const BookNow = () => {
   const [loading, setLoading] = useState(false);
   const [serviceType, setServiceType] = useState("");
   const [propertyType, setPropertyType] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -39,20 +50,48 @@ const BookNow = () => {
     e.preventDefault();
     if (!user || !date || !serviceType || !propertyType) return;
 
-    setLoading(true);
     const formData = new FormData(e.currentTarget);
+    const rawData = {
+      firstName: formData.get("firstName") as string,
+      lastName: formData.get("lastName") as string,
+      email: formData.get("email") as string,
+      phone: formData.get("phone") as string,
+      address: formData.get("address") as string,
+      notes: (formData.get("notes") as string) || undefined,
+    };
+
+    // Validate with zod
+    const result = bookingSchema.safeParse(rawData);
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {};
+      result.error.errors.forEach((err) => {
+        if (err.path[0]) {
+          fieldErrors[err.path[0] as string] = err.message;
+        }
+      });
+      setErrors(fieldErrors);
+      toast({
+        variant: "destructive",
+        title: "Validation Error",
+        description: "Please fix the errors in the form.",
+      });
+      return;
+    }
+
+    setErrors({});
+    setLoading(true);
 
     const { error } = await supabase.from("bookings").insert([{
       customer_id: user.id,
-      first_name: formData.get("firstName") as string,
-      last_name: formData.get("lastName") as string,
-      email: formData.get("email") as string,
-      phone: formData.get("phone") as string,
+      first_name: result.data.firstName,
+      last_name: result.data.lastName,
+      email: result.data.email,
+      phone: result.data.phone,
       service_type: serviceType as "residential" | "commercial" | "deep_clean" | "carpet_clean" | "window_clean" | "end_of_lease",
       property_type: propertyType as "apartment" | "house" | "office" | "retail" | "industrial",
-      service_address: formData.get("address") as string,
+      service_address: result.data.address,
       preferred_date: format(date, "yyyy-MM-dd"),
-      notes: formData.get("notes") as string || null,
+      notes: result.data.notes || null,
     }]);
 
     setLoading(false);
@@ -98,22 +137,26 @@ const BookNow = () => {
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="firstName">First Name *</Label>
-                      <Input id="firstName" name="firstName" placeholder="John" required />
+                      <Input id="firstName" name="firstName" placeholder="John" required maxLength={50} />
+                      {errors.firstName && <p className="text-sm text-destructive">{errors.firstName}</p>}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="lastName">Last Name *</Label>
-                      <Input id="lastName" name="lastName" placeholder="Smith" required />
+                      <Input id="lastName" name="lastName" placeholder="Smith" required maxLength={50} />
+                      {errors.lastName && <p className="text-sm text-destructive">{errors.lastName}</p>}
                     </div>
                   </div>
                   
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="email">Email Address *</Label>
-                      <Input id="email" name="email" type="email" placeholder="john@example.com" required />
+                      <Input id="email" name="email" type="email" placeholder="john@example.com" required maxLength={255} />
+                      {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="phone">Phone Number *</Label>
-                      <Input id="phone" name="phone" type="tel" placeholder="+61 XXX XXX XXX" required />
+                      <Input id="phone" name="phone" type="tel" placeholder="+61 XXX XXX XXX" required maxLength={20} />
+                      {errors.phone && <p className="text-sm text-destructive">{errors.phone}</p>}
                     </div>
                   </div>
                 </div>
@@ -186,7 +229,8 @@ const BookNow = () => {
 
                   <div className="space-y-2">
                     <Label htmlFor="address">Service Address *</Label>
-                    <Input id="address" name="address" placeholder="123 Main St, Sydney NSW 2000" required />
+                    <Input id="address" name="address" placeholder="123 Main St, Sydney NSW 2000" required maxLength={500} />
+                    {errors.address && <p className="text-sm text-destructive">{errors.address}</p>}
                   </div>
 
                   <div className="space-y-2">
@@ -196,7 +240,9 @@ const BookNow = () => {
                       name="notes"
                       placeholder="Tell us more about your cleaning requirements..."
                       rows={4}
+                      maxLength={2000}
                     />
+                    {errors.notes && <p className="text-sm text-destructive">{errors.notes}</p>}
                   </div>
                 </div>
 

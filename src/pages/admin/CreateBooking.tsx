@@ -11,6 +11,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Calendar, MapPin, User } from "lucide-react";
 import { Link } from "react-router-dom";
+import { z } from "zod";
+
+const adminBookingSchema = z.object({
+  first_name: z.string().trim().min(1, "First name is required").max(50, "First name must be less than 50 characters"),
+  last_name: z.string().trim().min(1, "Last name is required").max(50, "Last name must be less than 50 characters"),
+  email: z.string().trim().email("Invalid email address").max(255, "Email must be less than 255 characters"),
+  phone: z.string().trim().min(1, "Phone is required").max(20, "Phone must be less than 20 characters"),
+  service_address: z.string().trim().min(1, "Address is required").max(500, "Address must be less than 500 characters"),
+  notes: z.string().max(2000, "Notes must be less than 2000 characters").optional(),
+  estimated_hours: z.number().min(0).max(100).optional().nullable(),
+  estimated_cost: z.number().min(0).max(100000).optional().nullable(),
+});
 
 interface Customer {
   id: string;
@@ -28,6 +40,7 @@ const CreateBooking = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [staff, setStaff] = useState<StaffMember[]>([]);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     customer_id: "",
     first_name: "",
@@ -123,23 +136,49 @@ const CreateBooking = () => {
       return;
     }
 
+    // Validate with zod
+    const rawData = {
+      first_name: formData.first_name,
+      last_name: formData.last_name,
+      email: formData.email,
+      phone: formData.phone,
+      service_address: formData.service_address,
+      notes: formData.notes || undefined,
+      estimated_hours: formData.estimated_hours ? Number(formData.estimated_hours) : null,
+      estimated_cost: formData.estimated_cost ? Number(formData.estimated_cost) : null,
+    };
+
+    const result = adminBookingSchema.safeParse(rawData);
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {};
+      result.error.errors.forEach((err) => {
+        if (err.path[0]) {
+          fieldErrors[err.path[0] as string] = err.message;
+        }
+      });
+      setErrors(fieldErrors);
+      toast({ variant: "destructive", title: "Validation Error", description: "Please fix the errors in the form." });
+      return;
+    }
+
+    setErrors({});
     setIsLoading(true);
 
     try {
       const bookingData = {
         customer_id: formData.customer_id,
-        first_name: formData.first_name,
-        last_name: formData.last_name,
-        email: formData.email,
-        phone: formData.phone,
+        first_name: result.data.first_name,
+        last_name: result.data.last_name,
+        email: result.data.email,
+        phone: result.data.phone,
         service_type: formData.service_type as "residential" | "commercial" | "deep_clean" | "carpet_clean" | "window_clean" | "end_of_lease",
         property_type: formData.property_type as "apartment" | "house" | "office" | "retail" | "industrial",
-        service_address: formData.service_address,
+        service_address: result.data.service_address,
         preferred_date: formData.preferred_date,
         staff_id: formData.staff_id || null,
-        estimated_hours: formData.estimated_hours ? Number(formData.estimated_hours) : null,
-        estimated_cost: formData.estimated_cost ? Number(formData.estimated_cost) : null,
-        notes: formData.notes || null,
+        estimated_hours: result.data.estimated_hours,
+        estimated_cost: result.data.estimated_cost,
+        notes: result.data.notes || null,
         status: formData.staff_id ? "confirmed" as const : "pending" as const,
       };
 
@@ -190,21 +229,25 @@ const CreateBooking = () => {
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <Label>First Name *</Label>
-                  <Input value={formData.first_name} onChange={(e) => setFormData({ ...formData, first_name: e.target.value })} required />
+                  <Input value={formData.first_name} onChange={(e) => setFormData({ ...formData, first_name: e.target.value })} required maxLength={50} />
+                  {errors.first_name && <p className="text-sm text-destructive">{errors.first_name}</p>}
                 </div>
                 <div>
                   <Label>Last Name *</Label>
-                  <Input value={formData.last_name} onChange={(e) => setFormData({ ...formData, last_name: e.target.value })} required />
+                  <Input value={formData.last_name} onChange={(e) => setFormData({ ...formData, last_name: e.target.value })} required maxLength={50} />
+                  {errors.last_name && <p className="text-sm text-destructive">{errors.last_name}</p>}
                 </div>
               </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <Label>Email *</Label>
-                  <Input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required />
+                  <Input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required maxLength={255} />
+                  {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
                 </div>
                 <div>
                   <Label>Phone *</Label>
-                  <Input value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} required />
+                  <Input value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} required maxLength={20} />
+                  {errors.phone && <p className="text-sm text-destructive">{errors.phone}</p>}
                 </div>
               </div>
             </CardContent>
@@ -268,7 +311,8 @@ const CreateBooking = () => {
             <CardContent className="space-y-4">
               <div>
                 <Label>Service Address *</Label>
-                <Input value={formData.service_address} onChange={(e) => setFormData({ ...formData, service_address: e.target.value })} required />
+                <Input value={formData.service_address} onChange={(e) => setFormData({ ...formData, service_address: e.target.value })} required maxLength={500} />
+                {errors.service_address && <p className="text-sm text-destructive">{errors.service_address}</p>}
               </div>
               <div>
                 <Label>Assign Staff (Optional)</Label>
@@ -283,7 +327,8 @@ const CreateBooking = () => {
               </div>
               <div>
                 <Label>Notes</Label>
-                <Textarea value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} placeholder="Any special instructions..." />
+                <Textarea value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} placeholder="Any special instructions..." maxLength={2000} />
+                {errors.notes && <p className="text-sm text-destructive">{errors.notes}</p>}
               </div>
             </CardContent>
           </Card>
