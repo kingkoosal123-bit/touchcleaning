@@ -78,23 +78,30 @@ const Footer = () => {
               </li>
               <li className="flex items-start space-x-3">
                 <Phone size={18} className="text-primary mt-0.5 flex-shrink-0" />
-                <span className="text-sm text-muted-foreground">+61 XXX XXX XXX</span>
-              </li>
+                  <a
+                    href="https://wa.link/7e8clb"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-muted-foreground hover:underline"
+                  >
+                    +61 XXX XXX XXX
+                  </a>
+                </li>
               <li className="flex items-start space-x-3">
                 <Mail size={18} className="text-primary mt-0.5 flex-shrink-0" />
                 <span className="text-sm text-muted-foreground">info@touchcleaning.com.au</span>
               </li>
             </ul>
             <div className="flex space-x-4 mt-6">
-              <a href="#" className="text-muted-foreground hover:text-primary transition-colors" aria-label="Facebook">
+              <a href="https://www.facebook.com/touchcleaningsolutions" className="text-muted-foreground hover:text-primary transition-colors" aria-label="Facebook">
                 <Facebook size={20} />
               </a>
               <a href="#" className="text-muted-foreground hover:text-primary transition-colors" aria-label="Instagram">
                 <Instagram size={20} />
               </a>
-              <a href="#" className="text-muted-foreground hover:text-primary transition-colors" aria-label="LinkedIn">
-                <Linkedin size={20} />
-              </a>
+              {/* <a href="#" className="text-muted-foreground hover:text-primary transition-colors" aria-label="LinkedIn">
+                <Linkedin size={20} /> */}
+              {/* </a> */}
             </div>
           </div>
         </div>
