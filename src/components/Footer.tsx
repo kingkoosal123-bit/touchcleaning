@@ -84,7 +84,7 @@ const Footer = () => {
                     rel="noopener noreferrer"
                     className="text-sm text-muted-foreground hover:underline"
                   >
-                    +61 XXX XXX XXX
+                    +61 452 419 700
                   </a>
                 </li>
               <li className="flex items-start space-x-3">
@@ -108,7 +108,7 @@ const Footer = () => {
 
         <div className="border-t border-border mt-8 pt-8 text-center">
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} Touch Cleaning Australia. All rights reserved.
+            © {new Date().getFullYear()} Touch Cleaning Australia. All rights reserved. 
           </p>
         </div>
       </div>
