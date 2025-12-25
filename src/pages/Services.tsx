@@ -32,7 +32,6 @@ interface CMSService {
 
 const Services = () => {
   const [services, setServices] = useState<CMSService[]>([]);
-  const [featuredServices, setFeaturedServices] = useState<CMSService[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -45,7 +44,6 @@ const Services = () => {
 
       if (!error && data) {
         setServices(data);
-        setFeaturedServices(data.filter(s => s.is_featured));
       }
       setLoading(false);
     };
@@ -124,7 +122,6 @@ const Services = () => {
   ];
 
   const displayServices = services.length > 0 ? services : fallbackServices;
-  const displayFeatured = featuredServices.length > 0 ? featuredServices : fallbackServices.filter(s => s.is_featured);
 
   return (
     <div className="min-h-screen bg-background">
@@ -143,47 +140,8 @@ const Services = () => {
             </p>
           </div>
 
-          {/* Featured Services with Images */}
-          {displayFeatured.length > 0 && (
-            <div className="grid md:grid-cols-2 gap-8 mb-16">
-              {displayFeatured.slice(0, 2).map((service) => {
-                const IconComponent = iconMap[service.icon || "Sparkles"] || Sparkles;
-                return (
-                  <Card key={service.id} className="overflow-hidden hover:shadow-lg transition-all">
-                    <div className="h-64 overflow-hidden">
-                      {service.image_url ? (
-                        <img 
-                          src={service.image_url} 
-                          alt={service.title}
-                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-primary/20 via-accent/10 to-muted flex items-center justify-center">
-                          <IconComponent className="w-20 h-20 text-primary/40" />
-                        </div>
-                      )}
-                    </div>
-                    <CardHeader>
-                      <CardTitle className="flex items-center text-2xl">
-                        <IconComponent className="mr-2 h-6 w-6 text-primary" />
-                        {service.title}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-muted-foreground mb-4">
-                        {service.short_description || service.description.slice(0, 150) + "..."}
-                      </p>
-                      <Button asChild>
-                        <Link to="/contact">Get a Quote</Link>
-                      </Button>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          )}
-
           {/* Services Grid */}
+
           {loading ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
               {Array(6).fill(0).map((_, index) => (
