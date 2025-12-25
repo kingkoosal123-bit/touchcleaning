@@ -116,14 +116,14 @@ const Locations = () => {
                   <MapPin className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
                   <div>
                     <p className="font-semibold text-foreground">Head Office</p>
-                    <p className="text-muted-foreground">Sydney, NSW, Australia</p>
+                    <p className="text-muted-foreground">21 Thorncraft Parade, Campsie NSW 2194</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
                   <Phone className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
                   <div>
                     <p className="font-semibold text-foreground">Phone</p>
-                    <p className="text-muted-foreground">+61 XXX XXX XXX</p>
+                    <p className="text-muted-foreground">+61 452 419 700 </p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
