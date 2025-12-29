@@ -1,169 +1,105 @@
-import { useEffect, useRef, useState } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import { useEffect, useRef } from "react";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 
-// Head office coordinates: 21 Thorncraft Parade, Campsie NSW 2194
-const HEAD_OFFICE = {
-  lng: 151.1029,
-  lat: -33.9118,
-  address: "21 Thorncraft Parade, Campsie NSW 2194"
-};
+// Fix default marker icons in bundlers (Vite/CRA/etc)
+import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
+import markerIcon from "leaflet/dist/images/marker-icon.png";
+import markerShadow from "leaflet/dist/images/marker-shadow.png";
 
-const RADIUS_KM = 50;
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+});
 
-interface ServiceAreaMapProps {
-  accessToken?: string;
-}
+const ADDRESS = "21 Thorncraft Parade, Campsie NSW 2194, Australia";
+const RADIUS_METERS = 50_000;
 
-const ServiceAreaMap = ({ accessToken }: ServiceAreaMapProps) => {
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const [token, setToken] = useState(accessToken || '');
-  const [showTokenInput, setShowTokenInput] = useState(!accessToken);
+export default function ServiceAreaMap() {
+  const mapRef = useRef<L.Map | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (!mapContainer.current || !token) return;
+    if (!containerRef.current || mapRef.current) return;
 
-    mapboxgl.accessToken = token;
+    // Create map (temporary center; updated after geocode)
+    const map = L.map(containerRef.current, {
+      zoomControl: true,
+      scrollWheelZoom: true,
+    }).setView([-33.91, 151.10], 12);
 
-    try {
-      map.current = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/streets-v12',
-        center: [HEAD_OFFICE.lng, HEAD_OFFICE.lat],
-        zoom: 9,
-      });
+    mapRef.current = map;
 
-      map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    // OpenStreetMap tiles (NO Mapbox)
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "&copy; OpenStreetMap contributors",
+      maxZoom: 19,
+    }).addTo(map);
 
-      // Add marker for head office
-      const marker = new mapboxgl.Marker({ color: '#0ea5e9' })
-        .setLngLat([HEAD_OFFICE.lng, HEAD_OFFICE.lat])
-        .setPopup(
-          new mapboxgl.Popup({ offset: 25 }).setHTML(
-            `<div style="padding: 8px;"><strong>Touch Cleaning HQ</strong><br/>${HEAD_OFFICE.address}</div>`
-          )
-        )
-        .addTo(map.current);
+    const controller = new AbortController();
 
-      // Add 50km radius circle
-      map.current.on('load', () => {
-        if (!map.current) return;
+    async function geocodeAndDraw() {
+      try {
+        // Nominatim (OpenStreetMap) geocoding
+        const url =
+          "https://nominatim.openstreetmap.org/search?" +
+          new URLSearchParams({
+            format: "json",
+            q: ADDRESS,
+            limit: "1",
+          }).toString();
 
-        // Create a circle using turf-like calculation
-        const radiusInDegrees = RADIUS_KM / 111.32; // approximate degrees per km at this latitude
-        const circle = createGeoJSONCircle([HEAD_OFFICE.lng, HEAD_OFFICE.lat], RADIUS_KM);
-
-        map.current.addSource('service-area', {
-          type: 'geojson',
-          data: circle
+        const res = await fetch(url, {
+          signal: controller.signal,
+          headers: { Accept: "application/json" },
         });
 
-        map.current.addLayer({
-          id: 'service-area-fill',
-          type: 'fill',
-          source: 'service-area',
-          paint: {
-            'fill-color': '#0ea5e9',
-            'fill-opacity': 0.15
-          }
-        });
+        if (!res.ok) throw new Error(`Geocoding failed: ${res.status}`);
+        const data: Array<{ lat: string; lon: string; display_name: string }> =
+          await res.json();
 
-        map.current.addLayer({
-          id: 'service-area-outline',
-          type: 'line',
-          source: 'service-area',
-          paint: {
-            'line-color': '#0ea5e9',
-            'line-width': 2,
-            'line-dasharray': [2, 2]
-          }
-        });
-      });
+        if (!data.length) throw new Error("No geocoding results found.");
 
-      setShowTokenInput(false);
-    } catch (error) {
-      console.error('Map initialization error:', error);
-      setShowTokenInput(true);
+        const lat = parseFloat(data[0].lat);
+        const lon = parseFloat(data[0].lon);
+        const center: L.LatLngExpression = [lat, lon];
+
+        // Marker (pointer/pin)
+        const marker = L.marker(center).addTo(map);
+        marker.bindPopup(`<b>Touch Cleaning HQ</b><br/>${ADDRESS}`).openPopup();
+
+        // 50km service circle - yellow border + skyblue fill
+        const circle = L.circle(center, {
+          radius: RADIUS_METERS,
+          color: "#FFD400",
+          weight: 3,
+          opacity: 0.95,
+          fillColor: "#87CEEB",
+          fillOpacity: 0.25,
+        }).addTo(map);
+
+        // Fit bounds to circle
+        map.fitBounds(circle.getBounds(), { padding: [20, 20] });
+      } catch (err) {
+        console.error(err);
+      }
     }
+
+    geocodeAndDraw();
 
     return () => {
-      map.current?.remove();
+      controller.abort();
+      map.remove();
+      mapRef.current = null;
     };
-  }, [token]);
-
-  // Create a GeoJSON circle
-  function createGeoJSONCircle(center: [number, number], radiusKm: number, points = 64) {
-    const coords: [number, number][] = [];
-    const km = radiusKm;
-    
-    for (let i = 0; i < points; i++) {
-      const angle = (i / points) * 2 * Math.PI;
-      const dx = km * Math.cos(angle);
-      const dy = km * Math.sin(angle);
-      
-      // Convert km to degrees (approximate)
-      const lat = center[1] + (dy / 111.32);
-      const lng = center[0] + (dx / (111.32 * Math.cos(center[1] * Math.PI / 180)));
-      
-      coords.push([lng, lat]);
-    }
-    coords.push(coords[0]); // Close the circle
-
-    return {
-      type: 'Feature' as const,
-      geometry: {
-        type: 'Polygon' as const,
-        coordinates: [coords]
-      },
-      properties: {}
-    };
-  }
-
-  if (showTokenInput) {
-    return (
-      <div className="w-full h-[400px] bg-muted rounded-xl flex flex-col items-center justify-center p-8">
-        <p className="text-muted-foreground text-center mb-4">
-          To display the service area map, please enter your Mapbox public token.
-          <br />
-          <a 
-            href="https://mapbox.com/" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-primary underline"
-          >
-            Get your token from Mapbox
-          </a>
-        </p>
-        <div className="flex gap-2 w-full max-w-md">
-          <input
-            type="text"
-            placeholder="Enter Mapbox public token"
-            value={token}
-            onChange={(e) => setToken(e.target.value)}
-            className="flex-1 px-4 py-2 rounded-lg border border-border bg-background text-foreground"
-          />
-          <button
-            onClick={() => setShowTokenInput(false)}
-            disabled={!token}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg disabled:opacity-50"
-          >
-            Load Map
-          </button>
-        </div>
-      </div>
-    );
-  }
+  }, []);
 
   return (
-    <div className="relative w-full h-[400px] rounded-xl overflow-hidden shadow-lg">
-      <div ref={mapContainer} className="absolute inset-0" />
-      <div className="absolute bottom-4 left-4 bg-background/95 backdrop-blur px-4 py-2 rounded-lg shadow-md">
-        <p className="text-sm font-medium text-foreground">Service Area: 50km radius</p>
-        <p className="text-xs text-muted-foreground">From Campsie, NSW</p>
-      </div>
-    </div>
+    <div
+      ref={containerRef}
+      className="w-full h-[420px] rounded-xl overflow-hidden shadow-lg"
+    />
   );
-};
-
-export default ServiceAreaMap;
+}
