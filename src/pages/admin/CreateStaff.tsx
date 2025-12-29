@@ -25,8 +25,9 @@ const CreateStaff = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Store current session before creating new user
-    const { data: currentSession } = await supabase.auth.getSession();
+    // Store current admin session before creating new user
+    const { data: currentSessionData } = await supabase.auth.getSession();
+    const adminSession = currentSessionData?.session;
 
     try {
       // Create user with Supabase Auth
@@ -45,43 +46,42 @@ const CreateStaff = () => {
       if (error) throw error;
 
       if (data.user) {
-        // Update the user role to staff
+        // Immediately restore admin session before doing any DB operations
+        if (adminSession) {
+          await supabase.auth.setSession({
+            access_token: adminSession.access_token,
+            refresh_token: adminSession.refresh_token,
+          });
+        }
+
+        // Wait a moment for the trigger to create default role
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // Now update the user role to staff (admin is authenticated)
         const { error: roleError } = await supabase
           .from("user_roles")
           .update({ role: "staff" })
           .eq("user_id", data.user.id);
 
         if (roleError) {
-          // If update fails, try insert
-          await supabase.from("user_roles").insert({
-            user_id: data.user.id,
-            role: "staff",
-          });
-        }
-
-        // Sign out the newly created user to restore admin session
-        await supabase.auth.signOut();
-        
-        // Restore admin session if it existed
-        if (currentSession?.session) {
-          await supabase.auth.setSession({
-            access_token: currentSession.session.access_token,
-            refresh_token: currentSession.session.refresh_token,
-          });
+          console.error("Role update error:", roleError);
+          // If update fails, the user was created with customer role by trigger
+          // We need admin to update it
+          throw new Error("Failed to assign staff role. Please update manually in Users section.");
         }
 
         toast({
           title: "Staff Created",
-          description: `Staff account for ${formData.fullName} has been created. They can now sign in at /auth`,
+          description: `Staff account for ${formData.fullName} has been created successfully.`,
         });
         navigate("/admin/users");
       }
     } catch (error: any) {
-      // Restore admin session on error
-      if (currentSession?.session) {
+      // Ensure admin session is restored on error
+      if (adminSession) {
         await supabase.auth.setSession({
-          access_token: currentSession.session.access_token,
-          refresh_token: currentSession.session.refresh_token,
+          access_token: adminSession.access_token,
+          refresh_token: adminSession.refresh_token,
         });
       }
       toast({
