@@ -4,6 +4,7 @@ import { MapPin, Phone, Mail, Clock } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Link } from "react-router-dom";
+import ServiceAreaMap from "@/components/ServiceAreaMap";
 
 const Locations = () => {
   const serviceAreas = [
@@ -55,18 +56,12 @@ const Locations = () => {
             </p>
           </div>
 
-          {/* Map Placeholder */}
+          {/* Interactive Map */}
           <div className="mb-16">
-            <Card className="overflow-hidden border-border">
-              <div className="aspect-video bg-gradient-to-br from-primary/10 via-accent/5 to-muted flex items-center justify-center relative">
-                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAwIDEwIEwgNDAgMTAgTSAxMCAwIEwgMTAgNDAgTSAwIDIwIEwgNDAgMjAgTSAyMCAwIEwgMjAgNDAgTSAwIDMwIEwgNDAgMzAgTSAzMCAwIEwgMzAgNDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iY3VycmVudENvbG9yIiBvcGFjaXR5PSIwLjA1IiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-50" />
-                <div className="text-center z-10">
-                  <MapPin className="w-24 h-24 text-primary mx-auto mb-4 opacity-60" />
-                  <p className="text-2xl font-semibold text-foreground mb-2">Interactive Map</p>
-                  <p className="text-muted-foreground">Sydney-wide service coverage</p>
-                </div>
-              </div>
-            </Card>
+            <h2 className="text-3xl font-bold text-foreground mb-8 text-center">
+              Service Coverage Area
+            </h2>
+            <ServiceAreaMap />
           </div>
 
           {/* Service Areas Grid */}
