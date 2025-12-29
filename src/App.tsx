@@ -12,6 +12,7 @@ import Contact from "./pages/Contact";
 import BookNow from "./pages/BookNow";
 import Gallery from "./pages/Gallery";
 import Blog from "./pages/Blog";
+import BlogPostPage from "./pages/BlogPost";
 import Locations from "./pages/Locations";
 import Team from "./pages/Team";
 import Auth from "./pages/Auth";
@@ -53,6 +54,7 @@ const App = () => (
             <Route path="/contact" element={<Contact />} />
             <Route path="/gallery" element={<Gallery />} />
             <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/:slug" element={<BlogPostPage />} />
             <Route path="/locations" element={<Locations />} />
             <Route path="/team" element={<Team />} />
             <Route path="/auth" element={<Auth />} />

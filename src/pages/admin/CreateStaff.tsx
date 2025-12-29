@@ -25,6 +25,9 @@ const CreateStaff = () => {
     e.preventDefault();
     setIsLoading(true);
 
+    // Store current session before creating new user
+    const { data: currentSession } = await supabase.auth.getSession();
+
     try {
       // Create user with Supabase Auth
       const { data, error } = await supabase.auth.signUp({
@@ -56,6 +59,17 @@ const CreateStaff = () => {
           });
         }
 
+        // Sign out the newly created user to restore admin session
+        await supabase.auth.signOut();
+        
+        // Restore admin session if it existed
+        if (currentSession?.session) {
+          await supabase.auth.setSession({
+            access_token: currentSession.session.access_token,
+            refresh_token: currentSession.session.refresh_token,
+          });
+        }
+
         toast({
           title: "Staff Created",
           description: `Staff account for ${formData.fullName} has been created. They can now sign in at /auth`,
@@ -63,6 +77,13 @@ const CreateStaff = () => {
         navigate("/admin/users");
       }
     } catch (error: any) {
+      // Restore admin session on error
+      if (currentSession?.session) {
+        await supabase.auth.setSession({
+          access_token: currentSession.session.access_token,
+          refresh_token: currentSession.session.refresh_token,
+        });
+      }
       toast({
         variant: "destructive",
         title: "Error",
