@@ -57,11 +57,13 @@ const Locations = () => {
           </div>
 
           {/* Interactive Map */}
-          <div className="mb-16">
+          <div className="mb-16 relative z-0">
             <h2 className="text-3xl font-bold text-foreground mb-8 text-center">
               Service Coverage Area
             </h2>
-            <ServiceAreaMap />
+            <div className="max-w-4xl mx-auto">
+              <ServiceAreaMap />
+            </div>
           </div>
 
           {/* Service Areas Grid */}
