@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { StaffProtectedRoute } from "@/components/staff/StaffProtectedRoute";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import Services from "./pages/Services";
@@ -28,7 +29,6 @@ import CreateAdmin from "./pages/admin/CreateAdmin";
 import CreateBooking from "./pages/admin/CreateBooking";
 import AdminPayroll from "./pages/admin/AdminPayroll";
 import AdminSEO from "./pages/admin/AdminSEO";
-import StaffDashboard from "./pages/staff/StaffDashboard";
 import CustomerDashboard from "./pages/customer/CustomerDashboard";
 import AdminCMSServices from "./pages/admin/cms/AdminCMSServices";
 import AdminCMSTeam from "./pages/admin/cms/AdminCMSTeam";
@@ -37,6 +37,12 @@ import AdminCMSGallery from "./pages/admin/cms/AdminCMSGallery";
 import AdminCMSBlog from "./pages/admin/cms/AdminCMSBlog";
 import AdminCMSEnquiries from "./pages/admin/cms/AdminCMSEnquiries";
 import AdminCMSSettings from "./pages/admin/cms/AdminCMSSettings";
+// Staff Pages
+import StaffJobsPage from "./pages/staff/StaffJobsPage";
+import StaffCompletedPage from "./pages/staff/StaffCompletedPage";
+import StaffSchedulePage from "./pages/staff/StaffSchedulePage";
+import StaffEarningsPage from "./pages/staff/StaffEarningsPage";
+import StaffProfilePage from "./pages/staff/StaffProfilePage";
 
 const queryClient = new QueryClient();
 
@@ -61,7 +67,15 @@ const App = () => (
             <Route path="/auth/admin" element={<AdminAuth />} />
             <Route path="/book" element={<ProtectedRoute><BookNow /></ProtectedRoute>} />
             <Route path="/dashboard" element={<ProtectedRoute><CustomerDashboard /></ProtectedRoute>} />
-            <Route path="/staff/dashboard" element={<ProtectedRoute><StaffDashboard /></ProtectedRoute>} />
+            
+            {/* Staff Portal Routes */}
+            <Route path="/staff" element={<StaffProtectedRoute><StaffJobsPage /></StaffProtectedRoute>} />
+            <Route path="/staff/completed" element={<StaffProtectedRoute><StaffCompletedPage /></StaffProtectedRoute>} />
+            <Route path="/staff/schedule" element={<StaffProtectedRoute><StaffSchedulePage /></StaffProtectedRoute>} />
+            <Route path="/staff/earnings" element={<StaffProtectedRoute><StaffEarningsPage /></StaffProtectedRoute>} />
+            <Route path="/staff/profile" element={<StaffProtectedRoute><StaffProfilePage /></StaffProtectedRoute>} />
+            
+            {/* Admin Routes */}
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/bookings" element={<AdminBookings />} />
             <Route path="/admin/bookings/create" element={<CreateBooking />} />
