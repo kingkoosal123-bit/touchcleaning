@@ -30,7 +30,7 @@ const Auth = () => {
         if (roleData?.role === "admin") {
           navigate("/admin");
         } else if (roleData?.role === "staff") {
-          navigate("/staff/dashboard");
+          navigate("/staff");
         } else {
           navigate("/dashboard");
         }
