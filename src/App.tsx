@@ -28,6 +28,7 @@ import CreateStaff from "./pages/admin/CreateStaff";
 import CreateAdmin from "./pages/admin/CreateAdmin";
 import CreateBooking from "./pages/admin/CreateBooking";
 import AdminPayroll from "./pages/admin/AdminPayroll";
+import AdminBookingPayroll from "./pages/admin/AdminBookingPayroll";
 import AdminSEO from "./pages/admin/AdminSEO";
 import CustomerDashboard from "./pages/customer/CustomerDashboard";
 import AdminCMSServices from "./pages/admin/cms/AdminCMSServices";
@@ -84,6 +85,7 @@ const App = () => (
             <Route path="/admin/customers" element={<AdminCustomers />} />
             <Route path="/admin/staff" element={<AdminStaff />} />
             <Route path="/admin/payroll" element={<AdminPayroll />} />
+            <Route path="/admin/booking-payroll" element={<AdminBookingPayroll />} />
             <Route path="/admin/users/create-staff" element={<CreateStaff />} />
             <Route path="/admin/users/create-admin" element={<CreateAdmin />} />
             <Route path="/admin/seo" element={<AdminSEO />} />
