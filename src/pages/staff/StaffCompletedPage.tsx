@@ -110,68 +110,70 @@ const StaffCompletedPage = () => {
 
       {/* Completed Jobs Table */}
       <Card>
-        <CardHeader>
+        <CardHeader className="p-4 md:p-6">
           <CardTitle>Job History</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0 md:p-6 md:pt-0">
           {bookings.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">
               No completed jobs yet
             </p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Service</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead>Completed</TableHead>
-                  <TableHead>Hours</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {bookings.map((booking) => (
-                  <TableRow
-                    key={booking.id}
-                    className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => {
-                      setSelectedBookingId(booking.id);
-                      setDetailsOpen(true);
-                    }}
-                  >
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">
-                          {booking.service_type.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {booking.property_type.replace(/_/g, " ")}
-                        </p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {booking.first_name} {booking.last_name}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1 text-sm max-w-48 truncate">
-                        <MapPin className="h-3 w-3 flex-shrink-0" />
-                        {booking.service_address}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {booking.completed_at
-                        ? format(new Date(booking.completed_at), "MMM d, yyyy")
-                        : "-"}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">
-                        {booking.staff_hours_worked || 0}h
-                      </Badge>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="min-w-[100px]">Service</TableHead>
+                    <TableHead className="hidden md:table-cell">Customer</TableHead>
+                    <TableHead className="hidden lg:table-cell">Location</TableHead>
+                    <TableHead className="hidden sm:table-cell">Completed</TableHead>
+                    <TableHead>Hours</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {bookings.map((booking) => (
+                    <TableRow
+                      key={booking.id}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => {
+                        setSelectedBookingId(booking.id);
+                        setDetailsOpen(true);
+                      }}
+                    >
+                      <TableCell>
+                        <div>
+                          <p className="font-medium text-xs md:text-sm">
+                            {booking.service_type.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+                          </p>
+                          <p className="text-xs text-muted-foreground hidden sm:block">
+                            {booking.property_type.replace(/_/g, " ")}
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        {booking.first_name} {booking.last_name}
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                        <div className="flex items-center gap-1 text-sm max-w-48 truncate">
+                          <MapPin className="h-3 w-3 flex-shrink-0" />
+                          {booking.service_address}
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell">
+                        {booking.completed_at
+                          ? format(new Date(booking.completed_at), "MMM d, yyyy")
+                          : "-"}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className="text-xs">
+                          {booking.staff_hours_worked || 0}h
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>

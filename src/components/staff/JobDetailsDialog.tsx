@@ -248,7 +248,7 @@ export const JobDetailsDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh]">
+      <DialogContent className="max-w-2xl max-h-[90vh] mx-4 w-[calc(100vw-2rem)]">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span>Job Details</span>
