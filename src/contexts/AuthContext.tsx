@@ -97,13 +97,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
     
-    if (!error) {
-      navigate("/");
+    if (!error && data.user) {
+      // Fetch role and redirect accordingly
+      const userRole = await fetchUserRole(data.user.id);
+      setRole(userRole);
+      
+      if (userRole === "admin") {
+        navigate("/admin");
+      } else if (userRole === "staff") {
+        navigate("/staff");
+      } else {
+        navigate("/dashboard");
+      }
     }
     
     return { error };
