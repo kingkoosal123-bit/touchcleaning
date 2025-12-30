@@ -99,7 +99,8 @@ export default function ServiceAreaMap() {
   return (
     <div
       ref={containerRef}
-      className="w-full h-[420px] rounded-xl overflow-hidden shadow-lg"
+      className="w-full h-[350px] rounded-xl overflow-hidden shadow-lg relative z-0"
+      style={{ isolation: "isolate" }}
     />
   );
 }
