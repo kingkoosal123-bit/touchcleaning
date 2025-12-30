@@ -57,6 +57,7 @@ const menuItems: MenuItem[] = [
     children: [
       { title: "Staff Database", path: "/admin/staff" },
       { title: "Create Staff", path: "/admin/users/create-staff" },
+      { title: "Payroll from Bookings", path: "/admin/booking-payroll" },
       { title: "Payroll Management", path: "/admin/payroll" },
     ],
   },

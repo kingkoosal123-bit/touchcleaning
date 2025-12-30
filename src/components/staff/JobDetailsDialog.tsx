@@ -12,9 +12,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Calendar,
   MapPin,
@@ -30,6 +32,7 @@ import {
   ThumbsUp,
   FileText,
   Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { Database } from "@/integrations/supabase/types";
 
@@ -62,12 +65,17 @@ export const JobDetailsDialog = ({
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [hoursWorked, setHoursWorked] = useState("");
+  const [remarks, setRemarks] = useState("");
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [showCompletionForm, setShowCompletionForm] = useState(false);
+  const [validationError, setValidationError] = useState("");
 
   useEffect(() => {
     if (open && bookingId) {
       fetchBookingDetails();
       fetchPhotos();
+      setShowCompletionForm(false);
+      setValidationError("");
     }
   }, [open, bookingId]);
 
@@ -84,6 +92,7 @@ export const JobDetailsDialog = ({
     if (!error && data) {
       setBooking(data);
       setHoursWorked(data.staff_hours_worked?.toString() || "");
+      setRemarks(data.notes || "");
     }
     setLoading(false);
   };
@@ -130,31 +139,42 @@ export const JobDetailsDialog = ({
       });
       fetchBookingDetails();
       onStatusUpdate();
+      if (newStatus === "completed") {
+        onOpenChange(false);
+      }
     }
     setUpdatingStatus(false);
   };
 
-  const updateHours = async () => {
-    if (!bookingId) return;
-    const hours = parseFloat(hoursWorked);
+  const handleCompleteJobClick = () => {
+    setShowCompletionForm(true);
+    setValidationError("");
+  };
 
-    if (isNaN(hours) || hours <= 0) {
-      toast({ variant: "destructive", title: "Error", description: "Please enter valid hours" });
+  const validateAndCompleteJob = async () => {
+    const hours = parseFloat(hoursWorked);
+    
+    if (!hoursWorked || isNaN(hours) || hours <= 0) {
+      setValidationError("Please enter valid hours worked (required)");
       return;
     }
 
-    const { error } = await supabase
+    // Save hours and remarks first
+    const { error: updateError } = await supabase
       .from("bookings")
-      .update({ staff_hours_worked: hours })
+      .update({ 
+        staff_hours_worked: hours,
+        notes: remarks || booking?.notes
+      })
       .eq("id", bookingId);
 
-    if (error) {
-      toast({ variant: "destructive", title: "Error", description: "Failed to update hours" });
-    } else {
-      toast({ title: "Success", description: "Hours saved" });
-      fetchBookingDetails();
-      onStatusUpdate();
+    if (updateError) {
+      toast({ variant: "destructive", title: "Error", description: "Failed to save job details" });
+      return;
     }
+
+    // Then complete the job
+    await updateStatus("completed");
   };
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -243,7 +263,135 @@ export const JobDetailsDialog = ({
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
+          ) : showCompletionForm ? (
+            /* Job Completion Form */
+            <div className="space-y-6">
+              <Card className="border-primary/20 bg-primary/5">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <CheckCircle className="h-5 w-5 text-primary" />
+                    Complete Job - Final Details
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {validationError && (
+                    <div className="flex items-center gap-2 p-3 bg-destructive/10 text-destructive rounded-lg">
+                      <AlertCircle className="h-4 w-4" />
+                      <span className="text-sm">{validationError}</span>
+                    </div>
+                  )}
+
+                  {/* Hours Worked - Required */}
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-1">
+                      <Clock className="h-4 w-4" />
+                      Hours Worked <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      type="number"
+                      step="0.5"
+                      min="0.5"
+                      placeholder="Enter total hours worked"
+                      value={hoursWorked}
+                      onChange={(e) => {
+                        setHoursWorked(e.target.value);
+                        setValidationError("");
+                      }}
+                      className="text-lg"
+                    />
+                    <p className="text-xs text-muted-foreground">Required: Enter the actual hours you worked on this job</p>
+                  </div>
+
+                  {/* Photo Upload - Optional */}
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-1">
+                      <Camera className="h-4 w-4" />
+                      Job Photos <span className="text-muted-foreground text-xs">(Optional)</span>
+                    </Label>
+                    <Label
+                      htmlFor="completion-photo-upload"
+                      className="flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg cursor-pointer hover:border-primary transition-colors"
+                    >
+                      {uploading ? (
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                      ) : (
+                        <Upload className="h-5 w-5" />
+                      )}
+                      <span>{uploading ? "Uploading..." : "Click to upload photos"}</span>
+                      <input
+                        id="completion-photo-upload"
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        className="hidden"
+                        onChange={handlePhotoUpload}
+                        disabled={uploading}
+                      />
+                    </Label>
+
+                    {photos.length > 0 && (
+                      <div className="grid grid-cols-4 gap-2 mt-2">
+                        {photos.map((photo) => (
+                          <div key={photo.id} className="relative group">
+                            <img
+                              src={photo.photo_url}
+                              alt="Job photo"
+                              className="w-full h-16 object-cover rounded-lg"
+                            />
+                            <button
+                              onClick={() => deletePhoto(photo.id)}
+                              className="absolute top-1 right-1 p-1 bg-destructive text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <p className="text-xs text-muted-foreground">Upload before/after photos of your work</p>
+                  </div>
+
+                  {/* Remarks - Optional */}
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-1">
+                      <FileText className="h-4 w-4" />
+                      Remarks / Notes <span className="text-muted-foreground text-xs">(Optional)</span>
+                    </Label>
+                    <Textarea
+                      placeholder="Add any notes about the job, special circumstances, or feedback..."
+                      value={remarks}
+                      onChange={(e) => setRemarks(e.target.value)}
+                      rows={3}
+                    />
+                    <p className="text-xs text-muted-foreground">Any additional notes for the manager</p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowCompletionForm(false)}
+                  className="flex-1"
+                >
+                  Back
+                </Button>
+                <Button
+                  onClick={validateAndCompleteJob}
+                  disabled={updatingStatus}
+                  className="flex-1 gap-2"
+                >
+                  {updatingStatus ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <CheckCircle className="h-4 w-4" />
+                  )}
+                  Save & Complete Job
+                </Button>
+              </div>
+            </div>
           ) : (
+            /* Regular Job Details View */
             <div className="space-y-6">
               {/* Service Info */}
               <div>
@@ -322,87 +470,44 @@ export const JobDetailsDialog = ({
                 </div>
               )}
 
-              <Separator />
-
-              {/* Hours Worked */}
-              {(booking.status === "in_progress" || booking.status === "completed") && (
-                <div className="space-y-3">
-                  <h4 className="font-medium flex items-center gap-2">
-                    <Clock className="h-4 w-4" />
-                    Hours Worked
-                  </h4>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      step="0.5"
-                      min="0"
-                      placeholder="Enter hours"
-                      value={hoursWorked}
-                      onChange={(e) => setHoursWorked(e.target.value)}
-                      className="w-32"
-                    />
-                    <Button variant="secondary" onClick={updateHours}>
-                      Save Hours
-                    </Button>
-                    {booking.staff_hours_worked && (
-                      <span className="text-sm text-muted-foreground">
-                        Current: {booking.staff_hours_worked}h
-                      </span>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Photo Upload */}
-              {(booking.status === "in_progress" || booking.status === "completed") && (
-                <div className="space-y-3">
-                  <h4 className="font-medium flex items-center gap-2">
-                    <Camera className="h-4 w-4" />
-                    Job Photos (Optional)
-                  </h4>
+              {/* Completed Job Info */}
+              {booking.status === "completed" && (
+                <>
+                  <Separator />
                   <div className="space-y-3">
-                    <Label
-                      htmlFor="photo-upload"
-                      className="flex items-center justify-center gap-2 p-6 border-2 border-dashed rounded-lg cursor-pointer hover:border-primary transition-colors"
-                    >
-                      {uploading ? (
-                        <Loader2 className="h-5 w-5 animate-spin" />
-                      ) : (
-                        <Upload className="h-5 w-5" />
-                      )}
-                      <span>{uploading ? "Uploading..." : "Click to upload photos"}</span>
-                      <input
-                        id="photo-upload"
-                        type="file"
-                        accept="image/*"
-                        multiple
-                        className="hidden"
-                        onChange={handlePhotoUpload}
-                        disabled={uploading}
-                      />
-                    </Label>
-
-                    {photos.length > 0 && (
-                      <div className="grid grid-cols-3 gap-2">
-                        {photos.map((photo) => (
-                          <div key={photo.id} className="relative group">
-                            <img
-                              src={photo.photo_url}
-                              alt="Job photo"
-                              className="w-full h-24 object-cover rounded-lg"
-                            />
-                            <button
-                              onClick={() => deletePhoto(photo.id)}
-                              className="absolute top-1 right-1 p-1 bg-destructive text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </div>
-                        ))}
+                    <h4 className="font-medium flex items-center gap-2 text-green-600">
+                      <CheckCircle className="h-4 w-4" />
+                      Completion Details
+                    </h4>
+                    <div className="bg-green-500/10 p-4 rounded-lg space-y-2">
+                      <div className="flex justify-between">
+                        <span>Hours Worked:</span>
+                        <span className="font-semibold">{booking.staff_hours_worked || 0}h</span>
                       </div>
-                    )}
+                      {booking.completed_at && (
+                        <div className="flex justify-between">
+                          <span>Completed At:</span>
+                          <span>{format(new Date(booking.completed_at), "MMM d, yyyy h:mm a")}</span>
+                        </div>
+                      )}
+                      {photos.length > 0 && (
+                        <div className="pt-2">
+                          <p className="text-sm mb-2">Photos: {photos.length}</p>
+                          <div className="grid grid-cols-4 gap-2">
+                            {photos.map((photo) => (
+                              <img
+                                key={photo.id}
+                                src={photo.photo_url}
+                                alt="Job photo"
+                                className="w-full h-16 object-cover rounded-lg"
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
+                </>
               )}
 
               <Separator />
@@ -431,11 +536,11 @@ export const JobDetailsDialog = ({
                 )}
                 {booking.status === "in_progress" && (
                   <Button
-                    onClick={() => updateStatus("completed")}
+                    onClick={handleCompleteJobClick}
                     disabled={updatingStatus}
                     className="flex-1 gap-2"
                   >
-                    {updatingStatus ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
+                    <CheckCircle className="h-4 w-4" />
                     Complete Job
                   </Button>
                 )}
