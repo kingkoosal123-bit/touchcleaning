@@ -25,7 +25,7 @@ const Navbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-20">
           <Link to="/" className="flex items-center space-x-3">
-            <img src={logo} alt="Touch Cleaning Australia" className="h-12 w-auto" />
+            <img src={logo} alt="Touch Cleaning Australia" className="h-14 md:h-16 w-auto" />
           </Link>
 
           <div className="hidden lg:flex items-center space-x-8">

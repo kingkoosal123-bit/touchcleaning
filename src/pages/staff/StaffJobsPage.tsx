@@ -147,64 +147,64 @@ const StaffJobsPage = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">My Jobs</h1>
-        <p className="text-muted-foreground">Manage your assigned cleaning jobs</p>
+        <h1 className="text-xl md:text-2xl font-bold">My Jobs</h1>
+        <p className="text-sm text-muted-foreground">Manage your assigned cleaning jobs</p>
       </div>
 
       {/* Quick Stats */}
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
-                <Bell className="h-5 w-5 text-amber-600" />
+          <CardContent className="pt-4 md:pt-6 p-3 md:p-6">
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="p-1.5 md:p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
+                <Bell className="h-4 w-4 md:h-5 md:w-5 text-amber-600" />
               </div>
               <div>
-                <div className="text-2xl font-bold">{newJobs.length}</div>
-                <p className="text-sm text-muted-foreground">New</p>
+                <div className="text-xl md:text-2xl font-bold">{newJobs.length}</div>
+                <p className="text-xs md:text-sm text-muted-foreground">New</p>
               </div>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                <CheckCircle className="h-5 w-5 text-blue-600" />
+          <CardContent className="pt-4 md:pt-6 p-3 md:p-6">
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="p-1.5 md:p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                <CheckCircle className="h-4 w-4 md:h-5 md:w-5 text-blue-600" />
               </div>
               <div>
-                <div className="text-2xl font-bold">{acceptedJobs.length}</div>
-                <p className="text-sm text-muted-foreground">Accepted</p>
+                <div className="text-xl md:text-2xl font-bold">{acceptedJobs.length}</div>
+                <p className="text-xs md:text-sm text-muted-foreground">Accepted</p>
               </div>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-                <Clock className="h-5 w-5 text-purple-600" />
+          <CardContent className="pt-4 md:pt-6 p-3 md:p-6">
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="p-1.5 md:p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                <Clock className="h-4 w-4 md:h-5 md:w-5 text-purple-600" />
               </div>
               <div>
-                <div className="text-2xl font-bold">{inProgressJobs.length}</div>
-                <p className="text-sm text-muted-foreground">In Progress</p>
+                <div className="text-xl md:text-2xl font-bold">{inProgressJobs.length}</div>
+                <p className="text-xs md:text-sm text-muted-foreground">In Progress</p>
               </div>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                <Briefcase className="h-5 w-5 text-green-600" />
+          <CardContent className="pt-4 md:pt-6 p-3 md:p-6">
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="p-1.5 md:p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                <Briefcase className="h-4 w-4 md:h-5 md:w-5 text-green-600" />
               </div>
               <div>
-                <div className="text-2xl font-bold">
+                <div className="text-xl md:text-2xl font-bold">
                   {newJobs.length + acceptedJobs.length + inProgressJobs.length}
                 </div>
-                <p className="text-sm text-muted-foreground">Total Active</p>
+                <p className="text-xs md:text-sm text-muted-foreground">Total Active</p>
               </div>
             </div>
           </CardContent>

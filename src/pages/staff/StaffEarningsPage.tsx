@@ -174,56 +174,58 @@ const StaffEarningsPage = () => {
 
       {/* Payroll History */}
       <Card>
-        <CardHeader>
+        <CardHeader className="p-4 md:p-6">
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
             Payroll History
           </CardTitle>
           <CardDescription>View your payment records</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0 md:p-6 md:pt-0">
           {payroll.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">
               No payroll records yet
             </p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Pay Period</TableHead>
-                  <TableHead>Hours</TableHead>
-                  <TableHead>Rate</TableHead>
-                  <TableHead>Gross</TableHead>
-                  <TableHead>Tax</TableHead>
-                  <TableHead>Super</TableHead>
-                  <TableHead>Net Pay</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {payroll.map((record) => (
-                  <TableRow key={record.id}>
-                    <TableCell>
-                      <div className="text-sm">
-                        <p>{format(new Date(record.pay_period_start), "MMM d")} -</p>
-                        <p>{format(new Date(record.pay_period_end), "MMM d, yyyy")}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell>{record.hours_worked}h</TableCell>
-                    <TableCell>${record.hourly_rate}/hr</TableCell>
-                    <TableCell>${record.gross_pay.toFixed(2)}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      -${(record.tax_withheld || 0).toFixed(2)}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      -${(record.superannuation || 0).toFixed(2)}
-                    </TableCell>
-                    <TableCell className="font-medium">${record.net_pay.toFixed(2)}</TableCell>
-                    <TableCell>{getPaymentStatusBadge(record.payment_status)}</TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="min-w-[100px]">Pay Period</TableHead>
+                    <TableHead className="hidden sm:table-cell">Hours</TableHead>
+                    <TableHead className="hidden md:table-cell">Rate</TableHead>
+                    <TableHead className="hidden lg:table-cell">Gross</TableHead>
+                    <TableHead className="hidden lg:table-cell">Tax</TableHead>
+                    <TableHead className="hidden xl:table-cell">Super</TableHead>
+                    <TableHead>Net Pay</TableHead>
+                    <TableHead>Status</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {payroll.map((record) => (
+                    <TableRow key={record.id}>
+                      <TableCell>
+                        <div className="text-xs md:text-sm">
+                          <p>{format(new Date(record.pay_period_start), "MMM d")} -</p>
+                          <p>{format(new Date(record.pay_period_end), "MMM d, yyyy")}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell">{record.hours_worked}h</TableCell>
+                      <TableCell className="hidden md:table-cell">${record.hourly_rate}/hr</TableCell>
+                      <TableCell className="hidden lg:table-cell">${record.gross_pay.toFixed(2)}</TableCell>
+                      <TableCell className="text-muted-foreground hidden lg:table-cell">
+                        -${(record.tax_withheld || 0).toFixed(2)}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground hidden xl:table-cell">
+                        -${(record.superannuation || 0).toFixed(2)}
+                      </TableCell>
+                      <TableCell className="font-medium text-sm">${record.net_pay.toFixed(2)}</TableCell>
+                      <TableCell>{getPaymentStatusBadge(record.payment_status)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>

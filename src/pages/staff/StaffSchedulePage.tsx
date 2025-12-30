@@ -86,13 +86,13 @@ const StaffSchedulePage = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Schedule</h1>
-        <p className="text-muted-foreground">View your upcoming job calendar</p>
+        <h1 className="text-xl md:text-2xl font-bold">Schedule</h1>
+        <p className="text-sm text-muted-foreground">View your upcoming job calendar</p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-4 md:gap-6 lg:grid-cols-3">
         {/* Calendar */}
         <Card className="lg:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
@@ -120,19 +120,20 @@ const StaffSchedulePage = () => {
           </CardHeader>
           <CardContent>
             {/* Day headers */}
-            <div className="grid grid-cols-7 gap-1 mb-2">
-              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-                <div key={day} className="text-center text-sm font-medium text-muted-foreground py-2">
-                  {day}
+            <div className="grid grid-cols-7 gap-0.5 md:gap-1 mb-2">
+              {["S", "M", "T", "W", "T", "F", "S"].map((day, idx) => (
+                <div key={idx} className="text-center text-xs md:text-sm font-medium text-muted-foreground py-1 md:py-2">
+                  <span className="md:hidden">{day}</span>
+                  <span className="hidden md:inline">{["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][idx]}</span>
                 </div>
               ))}
             </div>
 
             {/* Calendar grid */}
-            <div className="grid grid-cols-7 gap-1">
+            <div className="grid grid-cols-7 gap-0.5 md:gap-1">
               {/* Empty cells for days before month start */}
               {Array.from({ length: monthStart.getDay() }).map((_, i) => (
-                <div key={`empty-${i}`} className="h-16" />
+                <div key={`empty-${i}`} className="h-10 md:h-16" />
               ))}
 
               {days.map((day) => {
@@ -144,7 +145,7 @@ const StaffSchedulePage = () => {
                     key={day.toISOString()}
                     onClick={() => setSelectedDate(day)}
                     className={cn(
-                      "h-16 p-1 rounded-lg text-left transition-colors relative",
+                      "h-10 md:h-16 p-0.5 md:p-1 rounded-lg text-left transition-colors relative",
                       isToday(day) && "bg-primary/10",
                       isSelected && "ring-2 ring-primary",
                       dayJobs.length > 0 && "hover:bg-accent"
@@ -177,18 +178,18 @@ const StaffSchedulePage = () => {
             </div>
 
             {/* Legend */}
-            <div className="flex items-center gap-4 mt-4 pt-4 border-t">
-              <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-full bg-amber-500" />
-                <span className="text-sm text-muted-foreground">New</span>
+            <div className="flex flex-wrap items-center gap-2 md:gap-4 mt-4 pt-4 border-t">
+              <div className="flex items-center gap-1 md:gap-2">
+                <div className="h-2 w-2 md:h-3 md:w-3 rounded-full bg-amber-500" />
+                <span className="text-xs md:text-sm text-muted-foreground">New</span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-full bg-blue-500" />
-                <span className="text-sm text-muted-foreground">Accepted</span>
+              <div className="flex items-center gap-1 md:gap-2">
+                <div className="h-2 w-2 md:h-3 md:w-3 rounded-full bg-blue-500" />
+                <span className="text-xs md:text-sm text-muted-foreground">Accepted</span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-full bg-purple-500" />
-                <span className="text-sm text-muted-foreground">In Progress</span>
+              <div className="flex items-center gap-1 md:gap-2">
+                <div className="h-2 w-2 md:h-3 md:w-3 rounded-full bg-purple-500" />
+                <span className="text-xs md:text-sm text-muted-foreground">In Progress</span>
               </div>
             </div>
           </CardContent>

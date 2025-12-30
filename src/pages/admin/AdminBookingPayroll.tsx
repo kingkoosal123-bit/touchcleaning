@@ -105,13 +105,17 @@ const AdminBookingPayroll = () => {
   const openPayrollDialog = async (booking: CompletedBooking) => {
     setSelectedBooking(booking);
     
-    // Fetch staff details to get hourly rate
+    // Fetch staff details to get hourly rate - use maybeSingle to avoid errors
     if (booking.staff_id) {
-      const { data: details } = await supabase
+      const { data: details, error } = await supabase
         .from("staff_details")
         .select("*")
         .eq("user_id", booking.staff_id)
-        .single();
+        .maybeSingle();
+
+      if (error) {
+        console.error("Error fetching staff details:", error);
+      }
 
       if (details) {
         setStaffDetails(details);
@@ -119,6 +123,10 @@ const AdminBookingPayroll = () => {
           ...prev,
           hourly_rate: details.hourly_rate || 30,
         }));
+      } else {
+        // If no staff_details found, create a default
+        setStaffDetails(null);
+        toast({ variant: "destructive", title: "Warning", description: "Staff details not found. Please ensure staff has a profile." });
       }
     }
 
@@ -138,7 +146,12 @@ const AdminBookingPayroll = () => {
   };
 
   const handleCreatePayroll = async () => {
-    if (!selectedBooking || !staffDetails) return;
+    if (!selectedBooking) return;
+    
+    if (!staffDetails) {
+      toast({ variant: "destructive", title: "Error", description: "Staff details not found. Cannot create payroll." });
+      return;
+    }
     
     setProcessingPayroll(true);
     
@@ -212,61 +225,61 @@ const AdminBookingPayroll = () => {
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
+      <div className="space-y-6 max-w-full overflow-hidden">
         <div>
-          <h1 className="text-2xl font-bold">Payroll from Bookings</h1>
-          <p className="text-muted-foreground">Create payroll records for completed bookings</p>
+          <h1 className="text-xl md:text-2xl font-bold">Payroll from Bookings</h1>
+          <p className="text-sm text-muted-foreground">Create payroll records for completed bookings</p>
         </div>
 
         {/* Summary Cards */}
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Completed Jobs</CardTitle>
-              <CheckCircle className="h-4 w-4 text-muted-foreground" />
+            <CardHeader className="flex flex-row items-center justify-between pb-2 p-3 md:p-4">
+              <CardTitle className="text-xs md:text-sm font-medium">Completed Jobs</CardTitle>
+              <CheckCircle className="h-4 w-4 text-muted-foreground hidden sm:block" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{bookings.length}</div>
+            <CardContent className="p-3 md:p-4 pt-0">
+              <div className="text-xl md:text-2xl font-bold">{bookings.length}</div>
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Pending Payroll</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
+            <CardHeader className="flex flex-row items-center justify-between pb-2 p-3 md:p-4">
+              <CardTitle className="text-xs md:text-sm font-medium">Pending Payroll</CardTitle>
+              <Clock className="h-4 w-4 text-muted-foreground hidden sm:block" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{bookings.filter(b => !b.payroll_created).length}</div>
+            <CardContent className="p-3 md:p-4 pt-0">
+              <div className="text-xl md:text-2xl font-bold">{bookings.filter(b => !b.payroll_created).length}</div>
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Total Hours</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
+            <CardHeader className="flex flex-row items-center justify-between pb-2 p-3 md:p-4">
+              <CardTitle className="text-xs md:text-sm font-medium">Total Hours</CardTitle>
+              <Clock className="h-4 w-4 text-muted-foreground hidden sm:block" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
+            <CardContent className="p-3 md:p-4 pt-0">
+              <div className="text-xl md:text-2xl font-bold">
                 {bookings.reduce((sum, b) => sum + (b.staff_hours_worked || 0), 0).toFixed(1)}h
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Payroll Created</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <CardHeader className="flex flex-row items-center justify-between pb-2 p-3 md:p-4">
+              <CardTitle className="text-xs md:text-sm font-medium">Payroll Created</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground hidden sm:block" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{bookings.filter(b => b.payroll_created).length}</div>
+            <CardContent className="p-3 md:p-4 pt-0">
+              <div className="text-xl md:text-2xl font-bold">{bookings.filter(b => b.payroll_created).length}</div>
             </CardContent>
           </Card>
         </div>
 
         {/* Completed Bookings Table */}
         <Card>
-          <CardHeader>
-            <CardTitle>Completed Bookings</CardTitle>
+          <CardHeader className="p-4 md:p-6">
+            <CardTitle className="text-lg">Completed Bookings</CardTitle>
             <CardDescription>Review completed jobs and create payroll for staff</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0 md:p-6 md:pt-0">
             {loading ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -276,79 +289,82 @@ const AdminBookingPayroll = () => {
                 No completed bookings found
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Booking</TableHead>
-                    <TableHead>Customer</TableHead>
-                    <TableHead>Staff</TableHead>
-                    <TableHead>Hours</TableHead>
-                    <TableHead>Completed</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {bookings.map((booking) => (
-                    <TableRow key={booking.id}>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">
-                            {booking.service_type.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {booking.property_type.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())}
-                          </p>
-                        </div>
-                      </TableCell>
-                      <TableCell>{booking.first_name} {booking.last_name}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-muted-foreground" />
-                          {booking.staff_name}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary">
-                          <Clock className="h-3 w-3 mr-1" />
-                          {booking.staff_hours_worked || 0}h
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {booking.completed_at 
-                          ? format(new Date(booking.completed_at), "MMM d, yyyy")
-                          : "-"
-                        }
-                      </TableCell>
-                      <TableCell>
-                        {booking.payroll_created ? (
-                          <Badge className="bg-green-500">Payroll Created</Badge>
-                        ) : (
-                          <Badge variant="secondary">Pending</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {!booking.payroll_created && (
-                          <Button 
-                            size="sm" 
-                            onClick={() => openPayrollDialog(booking)}
-                          >
-                            <DollarSign className="h-4 w-4 mr-1" />
-                            Create Payroll
-                          </Button>
-                        )}
-                      </TableCell>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="min-w-[120px]">Booking</TableHead>
+                      <TableHead className="hidden md:table-cell">Customer</TableHead>
+                      <TableHead>Staff</TableHead>
+                      <TableHead className="hidden sm:table-cell">Hours</TableHead>
+                      <TableHead className="hidden lg:table-cell">Completed</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {bookings.map((booking) => (
+                      <TableRow key={booking.id}>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium text-xs md:text-sm">
+                              {booking.service_type.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())}
+                            </p>
+                            <p className="text-xs text-muted-foreground hidden sm:block">
+                              {booking.property_type.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())}
+                            </p>
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">{booking.first_name} {booking.last_name}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1 md:gap-2">
+                            <User className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
+                            <span className="text-xs md:text-sm truncate max-w-[80px] md:max-w-none">{booking.staff_name}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell">
+                          <Badge variant="secondary" className="text-xs">
+                            <Clock className="h-3 w-3 mr-1" />
+                            {booking.staff_hours_worked || 0}h
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell">
+                          {booking.completed_at 
+                            ? format(new Date(booking.completed_at), "MMM d, yyyy")
+                            : "-"
+                          }
+                        </TableCell>
+                        <TableCell>
+                          {booking.payroll_created ? (
+                            <Badge className="bg-green-500 text-xs">Done</Badge>
+                          ) : (
+                            <Badge variant="secondary" className="text-xs">Pending</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {!booking.payroll_created && (
+                            <Button 
+                              size="sm" 
+                              onClick={() => openPayrollDialog(booking)}
+                              className="text-xs h-8 px-2 md:px-3"
+                            >
+                              <DollarSign className="h-3 w-3 md:mr-1" />
+                              <span className="hidden md:inline">Create Payroll</span>
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </CardContent>
         </Card>
 
         {/* Create Payroll Dialog */}
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto mx-4">
             <DialogHeader>
               <DialogTitle>Create Payroll from Booking</DialogTitle>
               <DialogDescription>
@@ -360,7 +376,7 @@ const AdminBookingPayroll = () => {
               <div className="space-y-4">
                 {/* Booking Info */}
                 <Card className="bg-muted/50">
-                  <CardContent className="pt-4 space-y-2">
+                  <CardContent className="pt-4 space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Service:</span>
                       <span className="font-medium">
@@ -379,9 +395,9 @@ const AdminBookingPayroll = () => {
                 </Card>
 
                 {/* Pay Settings */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label>Hourly Rate ($)</Label>
+                    <Label className="text-sm">Hourly Rate ($)</Label>
                     <Input
                       type="number"
                       value={formData.hourly_rate}
@@ -389,7 +405,7 @@ const AdminBookingPayroll = () => {
                     />
                   </div>
                   <div>
-                    <Label>Tax Deduction (%)</Label>
+                    <Label className="text-sm">Tax Deduction (%)</Label>
                     <Input
                       type="number"
                       value={formData.tax_deduction}
@@ -398,9 +414,9 @@ const AdminBookingPayroll = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label>Bonus ($)</Label>
+                    <Label className="text-sm">Bonus ($)</Label>
                     <Input
                       type="number"
                       value={formData.bonus}
@@ -408,7 +424,7 @@ const AdminBookingPayroll = () => {
                     />
                   </div>
                   <div>
-                    <Label>Other Deductions ($)</Label>
+                    <Label className="text-sm">Other Deductions ($)</Label>
                     <Input
                       type="number"
                       value={formData.other_deductions}
@@ -419,7 +435,7 @@ const AdminBookingPayroll = () => {
 
                 {formData.bonus > 0 && (
                   <div>
-                    <Label>Bonus Reason</Label>
+                    <Label className="text-sm">Bonus Reason</Label>
                     <Input
                       placeholder="e.g., Excellent work, customer tip"
                       value={formData.bonus_reason}
@@ -452,7 +468,7 @@ const AdminBookingPayroll = () => {
                   ) : (
                     <DollarSign className="h-4 w-4 mr-2" />
                   )}
-                  Create Payroll Record
+                  Create Payroll Entry
                 </Button>
               </div>
             )}
