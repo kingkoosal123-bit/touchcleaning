@@ -19,7 +19,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -41,7 +40,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { Search, UserPlus, Shield, Pencil, Trash2, Eye } from "lucide-react";
+import { Search, UserPlus, Shield, Pencil, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface AdminUser {
@@ -51,6 +50,7 @@ interface AdminUser {
   phone: string | null;
   created_at: string;
   admin_level: string | null;
+  department: string | null;
   can_manage_bookings: boolean | null;
   can_manage_customers: boolean | null;
   can_manage_staff: boolean | null;
@@ -64,28 +64,13 @@ const AdminManagers = () => {
   const [admins, setAdmins] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingAdmin, setEditingAdmin] = useState<AdminUser | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
-    checkSuperAdmin();
     fetchAdmins();
   }, []);
-
-  const checkSuperAdmin = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const { data } = await supabase
-        .from("admin_details")
-        .select("admin_level")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      
-      setIsSuperAdmin(data?.admin_level === "super");
-    }
-  };
 
   const fetchAdmins = async () => {
     // Fetch admin roles
@@ -94,7 +79,8 @@ const AdminManagers = () => {
       .select("user_id")
       .eq("role", "admin");
 
-    if (!adminRoles) {
+    if (!adminRoles || adminRoles.length === 0) {
+      setAdmins([]);
       setLoading(false);
       return;
     }
@@ -123,6 +109,7 @@ const AdminManagers = () => {
         phone: profile.phone,
         created_at: profile.created_at,
         admin_level: details?.admin_level || "standard",
+        department: details?.department || null,
         can_manage_bookings: details?.can_manage_bookings ?? true,
         can_manage_customers: details?.can_manage_customers ?? true,
         can_manage_staff: details?.can_manage_staff ?? true,
@@ -149,6 +136,7 @@ const AdminManagers = () => {
       .from("admin_details")
       .update({
         admin_level: editingAdmin.admin_level,
+        department: editingAdmin.department,
         can_manage_bookings: editingAdmin.can_manage_bookings,
         can_manage_customers: editingAdmin.can_manage_customers,
         can_manage_staff: editingAdmin.can_manage_staff,
@@ -169,26 +157,39 @@ const AdminManagers = () => {
   };
 
   const handleDeleteAdmin = async (admin: AdminUser) => {
-    // Remove admin role and make them a customer
+    // Remove admin role and details, make them a customer
     await supabase.from("user_roles").delete().eq("user_id", admin.user_id);
     await supabase.from("admin_details").delete().eq("user_id", admin.user_id);
     await supabase.from("user_roles").insert({ user_id: admin.user_id, role: "customer" });
+    
+    // Create customer details
+    await supabase.from("customer_details").upsert({
+      user_id: admin.user_id,
+      referral_code: admin.user_id.substring(0, 8).toUpperCase(),
+    });
 
-    toast({ title: "Success", description: "Admin access removed" });
+    toast({ title: "Success", description: "Admin access removed. User is now a customer." });
     fetchAdmins();
   };
 
   const getAdminLevelBadge = (level: string | null) => {
-    if (level === "super") {
-      return <Badge className="bg-destructive text-destructive-foreground">Super Admin</Badge>;
+    switch (level) {
+      case "admin":
+        return <Badge className="bg-destructive text-destructive-foreground">Admin</Badge>;
+      case "manager":
+        return <Badge className="bg-primary text-primary-foreground">Manager</Badge>;
+      case "supervisor":
+        return <Badge variant="secondary">Supervisor</Badge>;
+      default:
+        return <Badge variant="outline">Standard</Badge>;
     }
-    return <Badge variant="secondary">Standard Admin</Badge>;
   };
 
   const filteredAdmins = admins.filter((admin) => {
     return (
       (admin.full_name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-      (admin.phone?.toLowerCase() || "").includes(searchTerm.toLowerCase())
+      (admin.phone?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (admin.department?.toLowerCase() || "").includes(searchTerm.toLowerCase())
     );
   });
 
@@ -208,23 +209,21 @@ const AdminManagers = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">Admin & Manager Users</h1>
-            <p className="text-muted-foreground">Manage administrators and their permissions</p>
+            <p className="text-muted-foreground">Manage administrators and managers who can access this dashboard</p>
           </div>
-          {isSuperAdmin && (
-            <Button asChild>
-              <Link to="/admin/users/create-admin">
-                <Shield className="h-4 w-4 mr-2" />
-                Create Admin
-              </Link>
-            </Button>
-          )}
+          <Button asChild>
+            <Link to="/admin/managers/create">
+              <Shield className="h-4 w-4 mr-2" />
+              Create Admin/Manager
+            </Link>
+          </Button>
         </div>
 
         {/* Stats */}
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Admins</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-bold">{admins.length}</p>
@@ -232,18 +231,26 @@ const AdminManagers = () => {
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Super Admins</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Admins</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold">{admins.filter(a => a.admin_level === "super").length}</p>
+              <p className="text-3xl font-bold">{admins.filter(a => a.admin_level === "admin").length}</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Standard Admins</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Managers</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold">{admins.filter(a => a.admin_level !== "super").length}</p>
+              <p className="text-3xl font-bold">{admins.filter(a => a.admin_level === "manager").length}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Supervisors</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold">{admins.filter(a => a.admin_level === "supervisor").length}</p>
             </CardContent>
           </Card>
         </div>
@@ -254,7 +261,7 @@ const AdminManagers = () => {
               <div className="relative flex-1 max-w-sm">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search admins..."
+                  placeholder="Search by name, phone, or department..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -268,10 +275,11 @@ const AdminManagers = () => {
                 <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead>Phone</TableHead>
-                  <TableHead>Level</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Department</TableHead>
                   <TableHead>Permissions</TableHead>
                   <TableHead>Joined</TableHead>
-                  {isSuperAdmin && <TableHead>Actions</TableHead>}
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -282,6 +290,7 @@ const AdminManagers = () => {
                     </TableCell>
                     <TableCell>{admin.phone || "N/A"}</TableCell>
                     <TableCell>{getAdminLevelBadge(admin.admin_level)}</TableCell>
+                    <TableCell>{admin.department || "—"}</TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
                         {admin.can_manage_bookings && <Badge variant="outline" className="text-xs">Bookings</Badge>}
@@ -291,42 +300,40 @@ const AdminManagers = () => {
                       </div>
                     </TableCell>
                     <TableCell>{format(new Date(admin.created_at), "PP")}</TableCell>
-                    {isSuperAdmin && (
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button variant="ghost" size="icon" onClick={() => handleEditAdmin(admin)}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Remove Admin Access?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  This will remove admin privileges from {admin.full_name}. They will become a regular customer.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDeleteAdmin(admin)}>
-                                  Remove Access
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </TableCell>
-                    )}
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button variant="ghost" size="icon" onClick={() => handleEditAdmin(admin)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Remove Admin Access?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This will remove admin privileges from {admin.full_name}. They will become a regular customer.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteAdmin(admin)}>
+                                Remove Access
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
             {filteredAdmins.length === 0 && (
-              <p className="text-center text-muted-foreground py-8">No admins found</p>
+              <p className="text-center text-muted-foreground py-8">No admin/manager users found</p>
             )}
           </CardContent>
         </Card>
@@ -336,12 +343,12 @@ const AdminManagers = () => {
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Edit Admin: {editingAdmin?.full_name}</DialogTitle>
+            <DialogTitle>Edit: {editingAdmin?.full_name}</DialogTitle>
           </DialogHeader>
           {editingAdmin && (
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label>Admin Level</Label>
+                <Label>Role Type</Label>
                 <Select
                   value={editingAdmin.admin_level || "standard"}
                   onValueChange={(value) => setEditingAdmin({ ...editingAdmin, admin_level: value })}
@@ -350,10 +357,20 @@ const AdminManagers = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="standard">Standard Admin</SelectItem>
-                    <SelectItem value="super">Super Admin</SelectItem>
+                    <SelectItem value="admin">Admin (Full Access)</SelectItem>
+                    <SelectItem value="manager">Manager</SelectItem>
+                    <SelectItem value="supervisor">Supervisor</SelectItem>
+                    <SelectItem value="standard">Standard</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Department</Label>
+                <Input
+                  value={editingAdmin.department || ""}
+                  onChange={(e) => setEditingAdmin({ ...editingAdmin, department: e.target.value })}
+                  placeholder="e.g., Operations"
+                />
               </div>
               <div className="space-y-2">
                 <Label className="text-sm font-medium">Permissions</Label>

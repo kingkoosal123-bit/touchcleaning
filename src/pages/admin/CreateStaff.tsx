@@ -25,65 +25,38 @@ const CreateStaff = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Store current admin session before creating new user
-    const { data: currentSessionData } = await supabase.auth.getSession();
-    const adminSession = currentSessionData?.session;
-
     try {
-      // Create user with Supabase Auth
-      const { data, error } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            full_name: formData.fullName,
-            phone: formData.phone,
-          },
-          emailRedirectTo: `${window.location.origin}/auth`,
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error("Not authenticated");
+      }
+
+      // Call edge function to create staff user
+      const response = await supabase.functions.invoke("create-user-with-role", {
+        body: {
+          email: formData.email,
+          password: formData.password,
+          fullName: formData.fullName,
+          phone: formData.phone,
+          role: "staff",
         },
       });
 
-      if (error) throw error;
-
-      if (data.user) {
-        // Immediately restore admin session before doing any DB operations
-        if (adminSession) {
-          await supabase.auth.setSession({
-            access_token: adminSession.access_token,
-            refresh_token: adminSession.refresh_token,
-          });
-        }
-
-        // Wait a moment for the trigger to create default role
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        // Now update the user role to staff (admin is authenticated)
-        const { error: roleError } = await supabase
-          .from("user_roles")
-          .update({ role: "staff" })
-          .eq("user_id", data.user.id);
-
-        if (roleError) {
-          console.error("Role update error:", roleError);
-          // If update fails, the user was created with customer role by trigger
-          // We need admin to update it
-          throw new Error("Failed to assign staff role. Please update manually in Users section.");
-        }
-
-        toast({
-          title: "Staff Created",
-          description: `Staff account for ${formData.fullName} has been created successfully.`,
-        });
-        navigate("/admin/users");
+      if (response.error) {
+        throw new Error(response.error.message || "Failed to create staff");
       }
+
+      if (!response.data?.success) {
+        throw new Error(response.data?.error || "Failed to create staff");
+      }
+
+      toast({
+        title: "Staff Created",
+        description: `Staff account for ${formData.fullName} has been created successfully.`,
+      });
+      navigate("/admin/staff");
     } catch (error: any) {
-      // Ensure admin session is restored on error
-      if (adminSession) {
-        await supabase.auth.setSession({
-          access_token: adminSession.access_token,
-          refresh_token: adminSession.refresh_token,
-        });
-      }
       toast({
         variant: "destructive",
         title: "Error",
@@ -99,7 +72,7 @@ const CreateStaff = () => {
       <div className="max-w-2xl mx-auto space-y-6">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" asChild>
-            <Link to="/admin/users">
+            <Link to="/admin/staff">
               <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>

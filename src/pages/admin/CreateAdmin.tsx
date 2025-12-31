@@ -43,85 +43,41 @@ const CreateAdmin = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Store current session before creating new user
-    const { data: currentSession } = await supabase.auth.getSession();
-
     try {
-      // Create user with Supabase Auth
-      const { data, error } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            full_name: formData.fullName,
-            phone: formData.phone,
-          },
-          emailRedirectTo: `${window.location.origin}/auth/admin`,
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error("Not authenticated");
+      }
+
+      // Call edge function to create admin user
+      const response = await supabase.functions.invoke("create-user-with-role", {
+        body: {
+          email: formData.email,
+          password: formData.password,
+          fullName: formData.fullName,
+          phone: formData.phone,
+          role: "admin",
+          adminLevel: formData.adminLevel,
+          department: formData.department || null,
+          permissions: permissions,
         },
       });
 
-      if (error) throw error;
-
-      if (data.user) {
-        // Update the user role to admin
-        const { error: roleError } = await supabase
-          .from("user_roles")
-          .update({ role: "admin" })
-          .eq("user_id", data.user.id);
-
-        if (roleError) {
-          // If update fails, try insert
-          await supabase.from("user_roles").insert({
-            user_id: data.user.id,
-            role: "admin",
-          });
-        }
-
-        // Update admin_details with permissions
-        const { error: detailsError } = await supabase
-          .from("admin_details")
-          .update({
-            admin_level: formData.adminLevel,
-            department: formData.department || null,
-            ...permissions,
-          })
-          .eq("user_id", data.user.id);
-
-        if (detailsError) {
-          // If update fails, try insert
-          await supabase.from("admin_details").insert({
-            user_id: data.user.id,
-            admin_level: formData.adminLevel,
-            department: formData.department || null,
-            ...permissions,
-          });
-        }
-
-        // Sign out the newly created user to restore admin session
-        await supabase.auth.signOut();
-        
-        // Restore admin session if it existed
-        if (currentSession?.session) {
-          await supabase.auth.setSession({
-            access_token: currentSession.session.access_token,
-            refresh_token: currentSession.session.refresh_token,
-          });
-        }
-
-        toast({
-          title: "Admin Created",
-          description: `Admin account for ${formData.fullName} has been created with selected permissions.`,
-        });
-        navigate("/admin/users");
+      if (response.error) {
+        throw new Error(response.error.message || "Failed to create admin");
       }
+
+      if (!response.data?.success) {
+        throw new Error(response.data?.error || "Failed to create admin");
+      }
+
+      toast({
+        title: "Admin Created",
+        description: `Admin account for ${formData.fullName} has been created successfully.`,
+      });
+      navigate("/admin/managers");
     } catch (error: any) {
-      // Restore admin session on error
-      if (currentSession?.session) {
-        await supabase.auth.setSession({
-          access_token: currentSession.session.access_token,
-          refresh_token: currentSession.session.refresh_token,
-        });
-      }
       toast({
         variant: "destructive",
         title: "Error",
@@ -147,13 +103,13 @@ const CreateAdmin = () => {
       <div className="max-w-2xl mx-auto space-y-6">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" asChild>
-            <Link to="/admin/users">
+            <Link to="/admin/managers">
               <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>
           <div>
-            <h1 className="text-2xl font-bold">Create Admin Account</h1>
-            <p className="text-muted-foreground">Add a new administrator with custom permissions</p>
+            <h1 className="text-2xl font-bold">Create Admin/Manager Account</h1>
+            <p className="text-muted-foreground">Add a new administrator or manager with custom permissions</p>
           </div>
         </div>
 
@@ -161,7 +117,7 @@ const CreateAdmin = () => {
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Warning</AlertTitle>
           <AlertDescription>
-            Admin accounts have access to system features based on permissions. Only create admin accounts for trusted personnel.
+            Admin/Manager accounts have access to admin dashboard based on permissions. Only create accounts for trusted personnel.
           </AlertDescription>
         </Alert>
 
@@ -170,10 +126,10 @@ const CreateAdmin = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Shield className="h-5 w-5" />
-                Admin Details
+                Account Details
               </CardTitle>
               <CardDescription>
-                Enter the details for the new administrator.
+                Enter the details for the new administrator/manager.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -202,16 +158,15 @@ const CreateAdmin = () => {
               </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="adminLevel">Admin Level</Label>
+                  <Label htmlFor="adminLevel">Role Type</Label>
                   <Select value={formData.adminLevel} onValueChange={(v) => setFormData({ ...formData, adminLevel: v })}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select level" />
+                      <SelectValue placeholder="Select role" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="standard">Standard Admin</SelectItem>
-                      <SelectItem value="manager">Manager</SelectItem>
+                      <SelectItem value="admin">Admin (Full Access)</SelectItem>
+                      <SelectItem value="manager">Manager (Limited Access)</SelectItem>
                       <SelectItem value="supervisor">Supervisor</SelectItem>
-                      <SelectItem value="super">Super Admin</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -258,7 +213,7 @@ const CreateAdmin = () => {
                 Access Permissions
               </CardTitle>
               <CardDescription>
-                Select what this admin can access and manage.
+                Select what this user can access and manage.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -283,14 +238,14 @@ const CreateAdmin = () => {
           </Card>
 
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Creating..." : "Create Admin Account"}
+            {isLoading ? "Creating..." : "Create Account"}
           </Button>
         </form>
 
         <Card className="bg-muted/50">
           <CardContent className="pt-6">
             <p className="text-sm text-muted-foreground">
-              <strong>Note:</strong> After creating the admin account, share the login credentials with the administrator. 
+              <strong>Note:</strong> After creating the account, share the login credentials with the user. 
               They can sign in at <code className="bg-muted px-1 rounded">/auth/admin</code> using their email and password.
             </p>
           </CardContent>

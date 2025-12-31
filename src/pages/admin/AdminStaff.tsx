@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -20,19 +21,24 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { Search, Eye, Clock, DollarSign, CheckCircle, UserPlus, Calendar, MapPin, Image } from "lucide-react";
+import { Search, Eye, Clock, UserPlus, MapPin, Image, Pencil, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface Staff {
   id: string;
+  user_id: string;
   full_name: string | null;
   phone: string | null;
   avatar_url: string | null;
@@ -41,6 +47,7 @@ interface Staff {
   tasks_assigned: number;
   total_hours: number;
   total_earnings: number;
+  hourly_rate: number;
 }
 
 interface StaffTask {
@@ -74,7 +81,8 @@ const AdminStaff = () => {
   const [taskPhotos, setTaskPhotos] = useState<TaskPhoto[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [photosDialogOpen, setPhotosDialogOpen] = useState(false);
-  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingStaff, setEditingStaff] = useState<Staff | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -88,7 +96,8 @@ const AdminStaff = () => {
       .select("user_id")
       .eq("role", "staff");
 
-    if (!staffRoles) {
+    if (!staffRoles || staffRoles.length === 0) {
+      setStaff([]);
       setLoading(false);
       return;
     }
@@ -101,6 +110,12 @@ const AdminStaff = () => {
       .select("*")
       .in("id", staffIds);
 
+    // Fetch staff details
+    const { data: staffDetails } = await supabase
+      .from("staff_details")
+      .select("user_id, hourly_rate")
+      .in("user_id", staffIds);
+
     // Fetch bookings assigned to staff
     const { data: bookings } = await supabase
       .from("bookings")
@@ -112,10 +127,13 @@ const AdminStaff = () => {
       const staffBookings = bookings?.filter((b) => b.staff_id === profile.id) || [];
       const completedTasks = staffBookings.filter((b) => b.status === "completed").length;
       const totalHours = staffBookings.reduce((sum, b) => sum + (b.staff_hours_worked || 0), 0);
-      const totalEarnings = staffBookings.reduce((sum, b) => sum + (b.actual_cost || 0) * 0.6, 0); // 60% to staff
+      const details = staffDetails?.find((d) => d.user_id === profile.id);
+      const hourlyRate = details?.hourly_rate || 30;
+      const totalEarnings = totalHours * hourlyRate;
 
       return {
         id: profile.id,
+        user_id: profile.id,
         full_name: profile.full_name,
         phone: profile.phone,
         avatar_url: profile.avatar_url,
@@ -124,6 +142,7 @@ const AdminStaff = () => {
         tasks_assigned: staffBookings.length,
         total_hours: totalHours,
         total_earnings: totalEarnings,
+        hourly_rate: hourlyRate,
       };
     });
 
@@ -145,8 +164,6 @@ const AdminStaff = () => {
   };
 
   const viewTaskPhotos = async (taskId: string) => {
-    setSelectedTaskId(taskId);
-    
     const { data } = await supabase
       .from("task_photos")
       .select("*")
@@ -155,6 +172,46 @@ const AdminStaff = () => {
 
     setTaskPhotos(data || []);
     setPhotosDialogOpen(true);
+  };
+
+  const handleEditStaff = (staffMember: Staff) => {
+    setEditingStaff(staffMember);
+    setEditDialogOpen(true);
+  };
+
+  const handleUpdateStaff = async () => {
+    if (!editingStaff) return;
+
+    // Update profile
+    await supabase
+      .from("profiles")
+      .update({
+        full_name: editingStaff.full_name,
+        phone: editingStaff.phone,
+      })
+      .eq("id", editingStaff.user_id);
+
+    // Update staff details
+    await supabase
+      .from("staff_details")
+      .update({
+        hourly_rate: editingStaff.hourly_rate,
+      })
+      .eq("user_id", editingStaff.user_id);
+
+    toast({ title: "Success", description: "Staff updated successfully" });
+    setEditDialogOpen(false);
+    fetchStaff();
+  };
+
+  const handleDeleteStaff = async (staffMember: Staff) => {
+    // Remove staff role and make them a customer
+    await supabase.from("user_roles").delete().eq("user_id", staffMember.user_id);
+    await supabase.from("staff_details").update({ is_active: false }).eq("user_id", staffMember.user_id);
+    await supabase.from("user_roles").insert({ user_id: staffMember.user_id, role: "customer" });
+
+    toast({ title: "Success", description: "Staff access removed. User is now a customer." });
+    fetchStaff();
   };
 
   const getStatusBadge = (status: string) => {
@@ -191,10 +248,10 @@ const AdminStaff = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">Staff Management</h1>
-            <p className="text-muted-foreground">Manage staff, view performance and assigned tasks</p>
+            <p className="text-muted-foreground">Manage staff members who perform cleaning tasks</p>
           </div>
           <Button asChild>
-            <Link to="/admin/users/create-staff">
+            <Link to="/admin/staff/create">
               <UserPlus className="h-4 w-4 mr-2" />
               Add New Staff
             </Link>
@@ -259,8 +316,8 @@ const AdminStaff = () => {
                   <TableHead>Contact</TableHead>
                   <TableHead>Tasks</TableHead>
                   <TableHead>Hours Worked</TableHead>
+                  <TableHead>Hourly Rate</TableHead>
                   <TableHead>Earnings</TableHead>
-                  <TableHead>Completion Rate</TableHead>
                   <TableHead>Joined</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -279,9 +336,7 @@ const AdminStaff = () => {
                             </span>
                           )}
                         </div>
-                        <div>
-                          <p className="font-medium">{staffMember.full_name || "No name"}</p>
-                        </div>
+                        <p className="font-medium">{staffMember.full_name || "No name"}</p>
                       </div>
                     </TableCell>
                     <TableCell>{staffMember.phone || "N/A"}</TableCell>
@@ -297,36 +352,41 @@ const AdminStaff = () => {
                         {staffMember.total_hours.toFixed(1)}h
                       </div>
                     </TableCell>
+                    <TableCell>${staffMember.hourly_rate}/hr</TableCell>
                     <TableCell>
                       <span className="font-semibold text-green-600">${staffMember.total_earnings.toFixed(2)}</span>
                     </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-green-500" 
-                            style={{ 
-                              width: `${staffMember.tasks_assigned > 0 ? (staffMember.tasks_completed / staffMember.tasks_assigned) * 100 : 0}%` 
-                            }}
-                          />
-                        </div>
-                        <span className="text-sm text-muted-foreground">
-                          {staffMember.tasks_assigned > 0 
-                            ? Math.round((staffMember.tasks_completed / staffMember.tasks_assigned) * 100) 
-                            : 0}%
-                        </span>
-                      </div>
-                    </TableCell>
                     <TableCell>{format(new Date(staffMember.created_at), "PP")}</TableCell>
                     <TableCell>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => viewStaffTasks(staffMember)}
-                      >
-                        <Eye className="h-4 w-4 mr-1" />
-                        View Tasks
-                      </Button>
+                      <div className="flex gap-1">
+                        <Button variant="outline" size="sm" onClick={() => viewStaffTasks(staffMember)}>
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleEditStaff(staffMember)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Remove Staff Access?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This will remove staff privileges from {staffMember.full_name}. They will become a regular customer.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteStaff(staffMember)}>
+                                Remove Access
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -355,7 +415,6 @@ const AdminStaff = () => {
                     <TableHead>Date</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Hours</TableHead>
-                    <TableHead>Payment</TableHead>
                     <TableHead>Photos</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -375,13 +434,8 @@ const AdminStaff = () => {
                       <TableCell>{format(new Date(task.preferred_date), "PP")}</TableCell>
                       <TableCell>{getStatusBadge(task.status)}</TableCell>
                       <TableCell>{task.staff_hours_worked?.toFixed(1) || "N/A"}h</TableCell>
-                      <TableCell>${((task.actual_cost || 0) * 0.6).toFixed(2)}</TableCell>
                       <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => viewTaskPhotos(task.id)}
-                        >
+                        <Button variant="ghost" size="sm" onClick={() => viewTaskPhotos(task.id)}>
                           <Image className="h-4 w-4" />
                         </Button>
                       </TableCell>
@@ -411,18 +465,53 @@ const AdminStaff = () => {
                     alt={photo.caption || "Task photo"} 
                     className="w-full h-48 object-cover rounded-lg"
                   />
-                  {photo.caption && (
-                    <p className="text-sm text-muted-foreground">{photo.caption}</p>
-                  )}
-                  <p className="text-xs text-muted-foreground">
-                    {format(new Date(photo.uploaded_at), "PPp")}
-                  </p>
+                  {photo.caption && <p className="text-sm text-muted-foreground">{photo.caption}</p>}
+                  <p className="text-xs text-muted-foreground">{format(new Date(photo.uploaded_at), "PPp")}</p>
                 </div>
               ))
             ) : (
               <p className="col-span-2 text-center text-muted-foreground py-8">No photos uploaded</p>
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Staff Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Staff: {editingStaff?.full_name}</DialogTitle>
+          </DialogHeader>
+          {editingStaff && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Full Name</Label>
+                <Input
+                  value={editingStaff.full_name || ""}
+                  onChange={(e) => setEditingStaff({ ...editingStaff, full_name: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Phone</Label>
+                <Input
+                  value={editingStaff.phone || ""}
+                  onChange={(e) => setEditingStaff({ ...editingStaff, phone: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Hourly Rate ($)</Label>
+                <Input
+                  type="number"
+                  value={editingStaff.hourly_rate}
+                  onChange={(e) => setEditingStaff({ ...editingStaff, hourly_rate: parseFloat(e.target.value) || 30 })}
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-4">
+                <Button variant="outline" onClick={() => setEditDialogOpen(false)}>Cancel</Button>
+                <Button onClick={handleUpdateStaff}>Save Changes</Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </AdminLayout>
