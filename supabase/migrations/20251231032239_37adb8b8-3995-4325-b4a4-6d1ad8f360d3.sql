@@ -1,0 +1,22 @@
+-- Delete old placeholder team members
+DELETE FROM cms_team_members WHERE name IN ('Sarah Mitchell', 'James Chen', 'Emma Thompson');
+
+-- Insert real team members
+INSERT INTO cms_team_members (name, role, bio, email, is_leadership, is_active, display_order) VALUES
+('Mukti Subedi', 'Director', 'Founder and Director of Touch Cleaning Australia, leading the company with vision and dedication to excellence in cleaning services.', NULL, true, true, 1),
+('Pavan Jay', 'Business Development Manager', 'Driving business growth and building strong client relationships across Sydney.', NULL, true, true, 2),
+('Deepak Bhandari', 'General Manager', 'Overseeing daily operations and ensuring service excellence across all projects.', NULL, true, true, 3),
+('Sasim Jung Karki', 'Service Manager', 'Managing service delivery and maintaining high-quality standards for all cleaning operations.', NULL, true, true, 4);
+
+-- Delete existing services and add updated ones
+DELETE FROM cms_services;
+
+INSERT INTO cms_services (title, slug, description, short_description, icon, features, is_active, is_featured, display_order) VALUES
+('Commercial, Office & Housekeeping', 'commercial-office-housekeeping', 'Professional cleaning services for offices, commercial spaces, and regular housekeeping. We ensure your workspace is always spotless and welcoming.', 'Professional office and commercial cleaning', 'Building2', ARRAY['Daily office cleaning', 'Reception area maintenance', 'Meeting room sanitization', 'Kitchen and breakroom cleaning', 'Waste management'], true, true, 1),
+('Floor Scrub, Strip & Sealing', 'floor-scrub-strip-sealing', 'Expert floor maintenance including scrubbing, stripping old finishes, and applying protective sealants to keep your floors looking pristine.', 'Complete floor restoration services', 'Layers', ARRAY['Floor scrubbing', 'Strip and seal', 'Buffing and polishing', 'Vinyl and tile restoration', 'Non-slip treatments'], true, true, 2),
+('School, Childcare & Aged Care Cleaning', 'school-childcare-aged-care', 'Specialized cleaning for educational institutions, childcare centers, and aged care facilities with focus on hygiene and safety standards.', 'Safe cleaning for sensitive environments', 'GraduationCap', ARRAY['Classroom sanitization', 'Play area cleaning', 'Kitchen hygiene', 'Bathroom deep cleaning', 'COVID-safe protocols'], true, true, 3),
+('Hospitality, Pub, Nightclub & Event Cleaning', 'hospitality-event-cleaning', 'Comprehensive cleaning solutions for hospitality venues including pubs, nightclubs, restaurants, and event spaces.', 'Post-event and venue cleaning', 'PartyPopper', ARRAY['Bar and counter cleaning', 'Dance floor maintenance', 'Kitchen deep cleaning', 'Post-event cleanup', 'Glass and dishware handling'], true, true, 4),
+('Professional Window & Construction Cleaning', 'window-construction-cleaning', 'Expert window cleaning and post-construction cleanup services for residential and commercial properties.', 'Crystal clear windows and post-build cleaning', 'Sparkles', ARRAY['High-rise window cleaning', 'Post-construction cleanup', 'Builder''s clean', 'Pressure washing', 'Facade cleaning'], true, true, 5),
+('High Pressure & Lawn Mowing', 'high-pressure-lawn-mowing', 'High-pressure cleaning for driveways, patios, and exteriors, plus professional lawn mowing and garden maintenance.', 'Outdoor and pressure cleaning services', 'Droplets', ARRAY['Driveway pressure cleaning', 'Patio restoration', 'Lawn mowing', 'Garden cleanup', 'Gutter cleaning'], true, false, 6),
+('Domestic & End of Lease Cleaning', 'domestic-end-of-lease', 'Thorough end of lease and domestic cleaning services to help you get your bond back or keep your home spotless.', 'Complete home and bond cleaning', 'Home', ARRAY['Bond back guarantee', 'Full house cleaning', 'Oven and appliance cleaning', 'Carpet steam cleaning', 'Window washing'], true, true, 7),
+('Strata, Apartment & Regular House Cleaning', 'strata-apartment-regular', 'Regular cleaning services for strata complexes, apartments, and residential homes with flexible scheduling options.', 'Regular residential cleaning', 'Building', ARRAY['Common area cleaning', 'Stairwell maintenance', 'Apartment cleaning', 'Weekly/fortnightly schedules', 'Spring cleaning'], true, false, 8);
