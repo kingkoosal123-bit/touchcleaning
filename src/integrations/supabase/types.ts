@@ -114,10 +114,12 @@ export type Database = {
         Row: {
           actual_cost: number | null
           actual_hours: number | null
+          booking_type: string | null
           completed_at: string | null
           created_at: string
           customer_id: string
           email: string
+          end_date: string | null
           estimated_cost: number | null
           estimated_hours: number | null
           first_name: string
@@ -127,6 +129,7 @@ export type Database = {
           phone: string
           preferred_date: string
           property_type: Database["public"]["Enums"]["property_type"]
+          selected_services: string[] | null
           service_address: string
           service_location_lat: number | null
           service_location_lng: number | null
@@ -141,10 +144,12 @@ export type Database = {
         Insert: {
           actual_cost?: number | null
           actual_hours?: number | null
+          booking_type?: string | null
           completed_at?: string | null
           created_at?: string
           customer_id: string
           email: string
+          end_date?: string | null
           estimated_cost?: number | null
           estimated_hours?: number | null
           first_name: string
@@ -154,6 +159,7 @@ export type Database = {
           phone: string
           preferred_date: string
           property_type: Database["public"]["Enums"]["property_type"]
+          selected_services?: string[] | null
           service_address: string
           service_location_lat?: number | null
           service_location_lng?: number | null
@@ -168,10 +174,12 @@ export type Database = {
         Update: {
           actual_cost?: number | null
           actual_hours?: number | null
+          booking_type?: string | null
           completed_at?: string | null
           created_at?: string
           customer_id?: string
           email?: string
+          end_date?: string | null
           estimated_cost?: number | null
           estimated_hours?: number | null
           first_name?: string
@@ -181,6 +189,7 @@ export type Database = {
           phone?: string
           preferred_date?: string
           property_type?: Database["public"]["Enums"]["property_type"]
+          selected_services?: string[] | null
           service_address?: string
           service_location_lat?: number | null
           service_location_lng?: number | null

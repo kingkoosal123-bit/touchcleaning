@@ -58,10 +58,16 @@ const Auth = () => {
         description: error.message,
       });
     } else {
+      // Sign out immediately after signup to prevent auto-login
+      await supabase.auth.signOut();
+      
       toast({
-        title: "Success!",
-        description: "Please check your email to confirm your account.",
+        title: "Account Created Successfully!",
+        description: "Please sign in with your credentials to continue.",
       });
+      
+      // Reset form and switch to signin tab would happen naturally
+      // The component will re-render without a logged-in user
     }
 
     setIsLoading(false);
