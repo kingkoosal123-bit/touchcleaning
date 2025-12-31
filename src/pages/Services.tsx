@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, Home, Sparkles, Wind, Droplets, Briefcase } from "lucide-react";
+import { Building2, Home, Sparkles, Wind, Droplets, Briefcase, Layers, GraduationCap, PartyPopper, Building } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { SEOHead } from "@/components/SEOHead";
@@ -16,6 +16,10 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Wind,
   Droplets,
   Briefcase,
+  Layers,
+  GraduationCap,
+  PartyPopper,
+  Building,
 };
 
 interface CMSService {
