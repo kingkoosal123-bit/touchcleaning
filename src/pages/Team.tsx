@@ -222,61 +222,6 @@ const Team = () => {
             )}
           </div>
 
-          {/* Core Team */}
-          {(displayTeam.length > 0 || loading) && (
-            <div className="mb-20">
-              <h2 className="text-3xl font-bold text-foreground mb-8 text-center">
-                Our Core Team
-              </h2>
-              {loading ? (
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {Array(6).fill(0).map((_, index) => (
-                    <Card key={index} className="border-border animate-pulse">
-                      <div className="aspect-video bg-muted" />
-                      <CardContent className="pt-6">
-                        <div className="bg-muted h-6 w-3/4 mb-2 rounded" />
-                        <div className="bg-muted h-5 w-1/2 rounded" />
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {displayTeam.map((member) => (
-                    <Card key={member.id} className="border-border hover:shadow-lg transition-all">
-                      <div className="aspect-video overflow-hidden">
-                        {member.image_url ? (
-                          <img 
-                            src={member.image_url} 
-                            alt={member.name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gradient-to-br from-primary/10 via-accent/5 to-muted flex items-center justify-center">
-                            <div className="text-6xl font-bold text-primary/30">
-                              {member.name.split(' ').map(n => n[0]).join('')}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                      <CardContent className="pt-6">
-                        <h3 className="text-xl font-bold text-foreground mb-1">
-                          {member.name}
-                        </h3>
-                        <p className="text-primary font-semibold mb-2">{member.role}</p>
-                        {member.bio && (
-                          <p className="text-sm text-muted-foreground">
-                            {member.bio}
-                          </p>
-                        )}
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
           {/* Values */}
           <div className="mb-20">
             <h2 className="text-3xl font-bold text-foreground mb-8 text-center">
