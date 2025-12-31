@@ -12,8 +12,11 @@ const Footer = () => {
             <p className="text-sm text-muted-foreground mb-4">
               Clean place, happier face
             </p>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground mb-2">
               Serving 500+ clients including multinational companies and government projects across Sydney, NSW.
+            </p>
+            <p className="text-sm text-muted-foreground font-medium">
+              ABN: 88 613 501 429
             </p>
           </div>
 
@@ -74,7 +77,7 @@ const Footer = () => {
             <ul className="space-y-3">
               <li className="flex items-start space-x-3">
                 <MapPin size={18} className="text-primary mt-0.5 flex-shrink-0" />
-                <span className="text-sm text-muted-foreground">Sydney, NSW, Australia</span>
+                <span className="text-sm text-muted-foreground">52 Bexley Rd, Campsie NSW 2194</span>
               </li>
               <li className="flex items-start space-x-3">
                 <Phone size={18} className="text-primary mt-0.5 flex-shrink-0" />
