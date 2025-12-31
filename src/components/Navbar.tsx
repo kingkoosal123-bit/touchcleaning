@@ -43,23 +43,15 @@ const Navbar = () => {
                 <Button asChild variant="ghost" size="lg">
                   <Link to="/dashboard">Dashboard</Link>
                 </Button>
-                <Button asChild variant="default" size="lg">
-                  <Link to="/book">Book Now</Link>
-                </Button>
                 <Button variant="outline" size="lg" onClick={signOut}>
                   <LogOut className="h-4 w-4 mr-2" />
                   Sign Out
                 </Button>
               </>
             ) : (
-              <>
-                <Button asChild variant="default" size="lg">
-                  <Link to="/book">Book Now</Link>
-                </Button>
-                <Button asChild variant="outline" size="lg">
-                  <Link to="/auth">Sign In</Link>
-                </Button>
-              </>
+              <Button asChild className="bg-secondary hover:bg-secondary/90 text-secondary-foreground" size="lg">
+                <Link to="/auth">Sign In</Link>
+              </Button>
             )}
           </div>
 
@@ -89,23 +81,15 @@ const Navbar = () => {
                 <Button asChild variant="ghost" className="w-full" size="lg">
                   <Link to="/dashboard" onClick={() => setIsOpen(false)}>Dashboard</Link>
                 </Button>
-                <Button asChild variant="default" className="w-full" size="lg">
-                  <Link to="/book" onClick={() => setIsOpen(false)}>Book Now</Link>
-                </Button>
                 <Button variant="outline" className="w-full" size="lg" onClick={signOut}>
                   <LogOut className="h-4 w-4 mr-2" />
                   Sign Out
                 </Button>
               </>
             ) : (
-              <>
-                <Button asChild variant="default" className="w-full" size="lg">
-                  <Link to="/book" onClick={() => setIsOpen(false)}>Book Now</Link>
-                </Button>
-                <Button asChild variant="outline" className="w-full" size="lg">
-                  <Link to="/auth" onClick={() => setIsOpen(false)}>Sign In</Link>
-                </Button>
-              </>
+              <Button asChild className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground" size="lg">
+                <Link to="/auth" onClick={() => setIsOpen(false)}>Sign In</Link>
+              </Button>
             )}
           </div>
         )}

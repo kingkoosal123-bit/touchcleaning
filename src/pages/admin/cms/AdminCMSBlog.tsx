@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ImageUpload } from "@/components/admin/ImageUpload";
+import { RichTextEditor } from "@/components/admin/RichTextEditor";
 
 interface BlogPost {
   id: string;
@@ -215,12 +216,10 @@ const AdminCMSBlog = () => {
 
                 <div className="space-y-2">
                   <Label htmlFor="content">Content</Label>
-                  <Textarea
-                    id="content"
+                  <RichTextEditor
                     value={formData.content}
-                    onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                    rows={10}
-                    placeholder="Full blog post content..."
+                    onChange={(value) => setFormData({ ...formData, content: value })}
+                    placeholder="Write your blog post content here..."
                   />
                 </div>
 

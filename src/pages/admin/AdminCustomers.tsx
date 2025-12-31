@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Table,
   TableBody,
@@ -19,12 +21,24 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { Search, Eye, Mail, Phone, MapPin, Calendar, DollarSign } from "lucide-react";
+import { Search, Eye, Phone, MapPin, Pencil, Trash2 } from "lucide-react";
 
 interface Customer {
   id: string;
+  user_id: string;
   full_name: string | null;
   phone: string | null;
   address: string | null;
@@ -50,7 +64,27 @@ const AdminCustomers = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [customerBookings, setCustomerBookings] = useState<CustomerBooking[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    checkSuperAdmin();
+  }, []);
+
+  const checkSuperAdmin = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data } = await supabase
+        .from("admin_details")
+        .select("admin_level")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      
+      setIsSuperAdmin(data?.admin_level === "super");
+    }
+  };
 
   useEffect(() => {
     fetchCustomers();
@@ -92,6 +126,7 @@ const AdminCustomers = () => {
 
       return {
         id: profile.id,
+        user_id: profile.id,
         full_name: profile.full_name,
         phone: profile.phone,
         address: profile.address,
@@ -104,6 +139,47 @@ const AdminCustomers = () => {
 
     setCustomers(customersWithStats);
     setLoading(false);
+  };
+
+  const handleEditCustomer = (customer: Customer) => {
+    setEditingCustomer(customer);
+    setEditDialogOpen(true);
+  };
+
+  const handleUpdateCustomer = async () => {
+    if (!editingCustomer) return;
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        full_name: editingCustomer.full_name,
+        phone: editingCustomer.phone,
+        address: editingCustomer.address,
+      })
+      .eq("id", editingCustomer.user_id);
+
+    if (error) {
+      toast({ variant: "destructive", title: "Error", description: "Failed to update customer" });
+    } else {
+      toast({ title: "Success", description: "Customer updated successfully" });
+      setEditDialogOpen(false);
+      fetchCustomers();
+    }
+  };
+
+  const handleDeleteCustomer = async (customer: Customer) => {
+    // This will cascade delete from auth.users due to FK constraints
+    const { error } = await supabase.auth.admin.deleteUser(customer.user_id);
+    
+    if (error) {
+      // Fallback: just remove roles and mark as inactive
+      await supabase.from("user_roles").delete().eq("user_id", customer.user_id);
+      await supabase.from("customer_details").update({ is_active: false }).eq("user_id", customer.user_id);
+      toast({ title: "Success", description: "Customer deactivated" });
+    } else {
+      toast({ title: "Success", description: "Customer deleted" });
+    }
+    fetchCustomers();
   };
 
   const viewCustomerBookings = async (customer: Customer) => {
@@ -254,14 +330,43 @@ const AdminCustomers = () => {
                     </TableCell>
                     <TableCell>{format(new Date(customer.created_at), "PP")}</TableCell>
                     <TableCell>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => viewCustomerBookings(customer)}
-                      >
-                        <Eye className="h-4 w-4 mr-1" />
-                        View Bookings
-                      </Button>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => viewCustomerBookings(customer)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        {isSuperAdmin && (
+                          <>
+                            <Button variant="ghost" size="sm" onClick={() => handleEditCustomer(customer)}>
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="sm">
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Customer?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This will deactivate the customer {customer.full_name}. This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDeleteCustomer(customer)}>
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -308,6 +413,49 @@ const AdminCustomers = () => {
               <p className="text-center text-muted-foreground py-8">No bookings found</p>
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Customer Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Customer</DialogTitle>
+          </DialogHeader>
+          {editingCustomer && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-name">Full Name</Label>
+                <Input
+                  id="edit-name"
+                  value={editingCustomer.full_name || ""}
+                  onChange={(e) => setEditingCustomer({ ...editingCustomer, full_name: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-phone">Phone</Label>
+                <Input
+                  id="edit-phone"
+                  value={editingCustomer.phone || ""}
+                  onChange={(e) => setEditingCustomer({ ...editingCustomer, phone: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-address">Address</Label>
+                <Textarea
+                  id="edit-address"
+                  value={editingCustomer.address || ""}
+                  onChange={(e) => setEditingCustomer({ ...editingCustomer, address: e.target.value })}
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-4">
+                <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleUpdateCustomer}>Save Changes</Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </AdminLayout>
