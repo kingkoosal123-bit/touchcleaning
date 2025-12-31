@@ -104,7 +104,7 @@ const Contact = () => {
                   
                   <div className="space-y-2">
                     <Label htmlFor="phone">Phone Number</Label>
-                    <Input id="phone" type="tel" placeholder="+61 XXX XXX XXX" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
+                    <Input id="phone" type="tel" placeholder="+61 452 419 700" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
                     {errors.phone && <p className="text-sm text-destructive">{errors.phone}</p>}
                   </div>
                   
@@ -144,7 +144,7 @@ const Contact = () => {
                     <div>
                       <h3 className="font-semibold text-foreground mb-2">Address</h3>
                       <p className="text-muted-foreground">
-                        Sydney, NSW<br />
+                        52 Bexley Rd, Campsie NSW 2194 <br />
                         Australia
                       </p>
                     </div>
@@ -161,7 +161,7 @@ const Contact = () => {
                     <div>
                       <h3 className="font-semibold text-foreground mb-2">Phone</h3>
                       <p className="text-muted-foreground">
-                        +61 XXX XXX XXX<br />
+                        +61 452 419 700 <br />
                         Available Mon-Sat, 8am-6pm
                       </p>
                     </div>
