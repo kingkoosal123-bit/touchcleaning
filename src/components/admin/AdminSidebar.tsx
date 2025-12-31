@@ -62,10 +62,10 @@ const menuItems: MenuItem[] = [
     ],
   },
   {
-    title: "User Management",
+    title: "Admin Management",
     icon: Building2,
     children: [
-      { title: "All Users", path: "/admin/users" },
+      { title: "Admin Users", path: "/admin/managers" },
       { title: "Create Admin", path: "/admin/users/create-admin" },
     ],
   },
