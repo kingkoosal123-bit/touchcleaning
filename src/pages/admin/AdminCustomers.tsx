@@ -66,25 +66,7 @@ const AdminCustomers = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const { toast } = useToast();
-
-  useEffect(() => {
-    checkSuperAdmin();
-  }, []);
-
-  const checkSuperAdmin = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const { data } = await supabase
-        .from("admin_details")
-        .select("admin_level")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      
-      setIsSuperAdmin(data?.admin_level === "super");
-    }
-  };
 
   useEffect(() => {
     fetchCustomers();
@@ -97,7 +79,8 @@ const AdminCustomers = () => {
       .select("user_id")
       .eq("role", "customer");
 
-    if (!customerRoles) {
+    if (!customerRoles || customerRoles.length === 0) {
+      setCustomers([]);
       setLoading(false);
       return;
     }
@@ -168,17 +151,11 @@ const AdminCustomers = () => {
   };
 
   const handleDeleteCustomer = async (customer: Customer) => {
-    // This will cascade delete from auth.users due to FK constraints
-    const { error } = await supabase.auth.admin.deleteUser(customer.user_id);
+    // Deactivate customer by removing their role and marking details as inactive
+    await supabase.from("user_roles").delete().eq("user_id", customer.user_id);
+    await supabase.from("customer_details").update({ is_active: false }).eq("user_id", customer.user_id);
     
-    if (error) {
-      // Fallback: just remove roles and mark as inactive
-      await supabase.from("user_roles").delete().eq("user_id", customer.user_id);
-      await supabase.from("customer_details").update({ is_active: false }).eq("user_id", customer.user_id);
-      toast({ title: "Success", description: "Customer deactivated" });
-    } else {
-      toast({ title: "Success", description: "Customer deleted" });
-    }
+    toast({ title: "Success", description: "Customer deactivated" });
     fetchCustomers();
   };
 
@@ -229,7 +206,7 @@ const AdminCustomers = () => {
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold">Customer Database</h1>
-          <p className="text-muted-foreground">View and manage all customers</p>
+          <p className="text-muted-foreground">View and manage all customers who sign up via /auth</p>
         </div>
 
         {/* Stats Cards */}
@@ -338,34 +315,30 @@ const AdminCustomers = () => {
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        {isSuperAdmin && (
-                          <>
-                            <Button variant="ghost" size="sm" onClick={() => handleEditCustomer(customer)}>
-                              <Pencil className="h-4 w-4" />
+                        <Button variant="ghost" size="sm" onClick={() => handleEditCustomer(customer)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="sm">
-                                  <Trash2 className="h-4 w-4 text-destructive" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Delete Customer?</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    This will deactivate the customer {customer.full_name}. This action cannot be undone.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => handleDeleteCustomer(customer)}>
-                                    Delete
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </>
-                        )}
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Deactivate Customer?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This will deactivate {customer.full_name}. Their booking history will be preserved.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteCustomer(customer)}>
+                                Deactivate
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </TableCell>
                   </TableRow>
