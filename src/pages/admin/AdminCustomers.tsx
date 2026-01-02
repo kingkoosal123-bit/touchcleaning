@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { RequirePermission } from "@/components/admin/RequirePermission";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -203,6 +204,7 @@ const AdminCustomers = () => {
 
   return (
     <AdminLayout>
+      <RequirePermission permission="can_manage_customers">
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold">Customer Database</h1>
@@ -431,6 +433,7 @@ const AdminCustomers = () => {
           )}
         </DialogContent>
       </Dialog>
+      </RequirePermission>
     </AdminLayout>
   );
 };
