@@ -167,11 +167,11 @@ const BlogPostPage = () => {
           )}
 
           {/* Content */}
-          <div className="prose prose-lg dark:prose-invert max-w-none">
+          <div className="max-w-none">
             {post.content ? (
               <div 
                 dangerouslySetInnerHTML={{ __html: post.content }}
-                className="text-foreground leading-relaxed space-y-6"
+                className="blog-content"
               />
             ) : (
               <p className="text-muted-foreground text-lg">{post.excerpt}</p>
