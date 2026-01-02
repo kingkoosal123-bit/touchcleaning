@@ -9,15 +9,11 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div>
             <img src={logo} alt="Touch Cleaning Australia" className="h-12 w-auto mb-4" />
-            <p className="text-sm text-muted-foreground mb-4">
-              Clean place, happier face
-            </p>
+            <p className="text-sm text-muted-foreground mb-4">Clean place, happier face</p>
             <p className="text-sm text-muted-foreground mb-2">
               Serving 500+ clients including multinational companies and government projects across Sydney, NSW.
             </p>
-            <p className="text-sm text-muted-foreground font-medium">
-              ABN: 88 613 501 429
-            </p>
+            <p className="text-sm text-muted-foreground font-medium">ABN: 88 613 501 429</p>
           </div>
 
           <div>
@@ -81,22 +77,26 @@ const Footer = () => {
               </li>
               <li className="flex items-start space-x-3">
                 <Phone size={18} className="text-primary mt-0.5 flex-shrink-0" />
-                  <a
-                    href="https://wa.link/7e8clb"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-muted-foreground hover:underline"
-                  >
-                    +61 452 419 700
-                  </a>
-                </li>
+                <a
+                  href="https://wa.link/7e8clb"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-muted-foreground hover:underline"
+                >
+                  +61 452 419 700
+                </a>
+              </li>
               <li className="flex items-start space-x-3">
                 <Mail size={18} className="text-primary mt-0.5 flex-shrink-0" />
-                <span className="text-sm text-muted-foreground">info@touchcleaning.com.au</span>
+                <span className="text-sm text-muted-foreground">touchcleaning.au@gmail.com</span>
               </li>
             </ul>
             <div className="flex space-x-4 mt-6">
-              <a href="https://www.facebook.com/touchcleaningsolutions" className="text-muted-foreground hover:text-primary transition-colors" aria-label="Facebook">
+              <a
+                href="https://www.facebook.com/touchcleaningsolutions"
+                className="text-muted-foreground hover:text-primary transition-colors"
+                aria-label="Facebook"
+              >
                 <Facebook size={20} />
               </a>
               <a href="#" className="text-muted-foreground hover:text-primary transition-colors" aria-label="Instagram">
@@ -111,7 +111,7 @@ const Footer = () => {
 
         <div className="border-t border-border mt-8 pt-8 text-center">
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} Touch Cleaning Australia. All rights reserved. 
+            © {new Date().getFullYear()} Touch Cleaning Australia. All rights reserved.
           </p>
         </div>
       </div>
