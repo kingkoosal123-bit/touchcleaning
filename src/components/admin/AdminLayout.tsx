@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminSidebar } from "./AdminSidebar";
 import { AdminHeader } from "./AdminHeader";
+import { AdminPermissionsProvider } from "@/contexts/AdminPermissionsContext";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -57,14 +58,16 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
   }
 
   return (
-    <div className="min-h-screen bg-muted/30 flex">
-      <AdminSidebar />
-      <div className="flex-1 flex flex-col">
-        <AdminHeader adminName={adminName} />
-        <main className="flex-1 p-6 overflow-auto">
-          {children}
-        </main>
+    <AdminPermissionsProvider>
+      <div className="min-h-screen bg-muted/30 flex">
+        <AdminSidebar />
+        <div className="flex-1 flex flex-col">
+          <AdminHeader adminName={adminName} />
+          <main className="flex-1 p-6 overflow-auto">
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
+    </AdminPermissionsProvider>
   );
 };

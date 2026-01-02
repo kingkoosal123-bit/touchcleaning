@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { RequirePermission } from "@/components/admin/RequirePermission";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -225,6 +226,7 @@ const AdminBookingPayroll = () => {
 
   return (
     <AdminLayout>
+      <RequirePermission permission="can_manage_payments">
       <div className="space-y-6 max-w-full overflow-hidden">
         <div>
           <h1 className="text-xl md:text-2xl font-bold">Payroll from Bookings</h1>
@@ -475,6 +477,7 @@ const AdminBookingPayroll = () => {
           </DialogContent>
         </Dialog>
       </div>
+      </RequirePermission>
     </AdminLayout>
   );
 };

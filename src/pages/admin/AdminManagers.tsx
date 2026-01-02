@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { RequirePermission } from "@/components/admin/RequirePermission";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { Search, UserPlus, Shield, Pencil, Trash2 } from "lucide-react";
@@ -205,6 +207,7 @@ const AdminManagers = () => {
 
   return (
     <AdminLayout>
+      <RequirePermission permission="can_manage_admins">
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -408,6 +411,7 @@ const AdminManagers = () => {
           )}
         </DialogContent>
       </Dialog>
+      </RequirePermission>
     </AdminLayout>
   );
 };
