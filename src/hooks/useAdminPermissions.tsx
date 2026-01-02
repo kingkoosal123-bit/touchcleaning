@@ -25,8 +25,8 @@ const DEFAULT_PERMISSIONS: AdminPermissions = {
   department: null,
 };
 
-// Full permissions for super admins
-const SUPER_ADMIN_PERMISSIONS: AdminPermissions = {
+// Full permissions for super/admin level users
+const FULL_ACCESS_PERMISSIONS: AdminPermissions = {
   can_manage_bookings: true,
   can_manage_staff: true,
   can_manage_customers: true,
@@ -36,6 +36,11 @@ const SUPER_ADMIN_PERMISSIONS: AdminPermissions = {
   can_edit_settings: true,
   admin_level: "super",
   department: null,
+};
+
+// Check if admin_level grants full access
+const isFullAccessLevel = (level: string): boolean => {
+  return ['super', 'admin'].includes(level);
 };
 
 export const useAdminPermissions = () => {
@@ -82,10 +87,17 @@ export const useAdminPermissions = () => {
         }
 
         if (adminDetails) {
-          // Super admins get all permissions regardless of what's stored
-          if (adminDetails.admin_level === "super" || adminDetails.admin_level === "admin") {
-            setPermissions(SUPER_ADMIN_PERMISSIONS);
+          const level = adminDetails.admin_level || "standard";
+          
+          // Super/admin levels get full permissions regardless of what's stored
+          if (isFullAccessLevel(level)) {
+            setPermissions({
+              ...FULL_ACCESS_PERMISSIONS,
+              admin_level: level,
+              department: adminDetails.department,
+            });
           } else {
+            // Managers/supervisors get their assigned permissions
             setPermissions({
               can_manage_bookings: adminDetails.can_manage_bookings ?? false,
               can_manage_staff: adminDetails.can_manage_staff ?? false,
@@ -94,14 +106,14 @@ export const useAdminPermissions = () => {
               can_manage_admins: adminDetails.can_manage_admins ?? false,
               can_view_reports: adminDetails.can_view_reports ?? false,
               can_edit_settings: adminDetails.can_edit_settings ?? false,
-              admin_level: adminDetails.admin_level || "standard",
+              admin_level: level,
               department: adminDetails.department,
             });
           }
         } else {
-          // No admin_details record - create one with default permissions
-          // This shouldn't happen normally, but handle it gracefully
-          setPermissions(DEFAULT_PERMISSIONS);
+          // No admin_details record - legacy admin, grant full access
+          console.log("No admin_details found, granting full access for legacy admin");
+          setPermissions(FULL_ACCESS_PERMISSIONS);
         }
       } catch (error) {
         console.error("Error in useAdminPermissions:", error);
@@ -119,7 +131,7 @@ export const useAdminPermissions = () => {
   };
 
   const isSuperAdmin = () => {
-    return permissions.admin_level === "super" || permissions.admin_level === "admin";
+    return isFullAccessLevel(permissions.admin_level);
   };
 
   const isManager = () => {
