@@ -12,6 +12,8 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Calendar, MapPin, User } from "lucide-react";
 import { Link } from "react-router-dom";
 import { z } from "zod";
+import { format } from "date-fns";
+import { emailService } from "@/lib/email";
 
 const adminBookingSchema = z.object({
   first_name: z.string().trim().min(1, "First name is required").max(50, "First name must be less than 50 characters"),
@@ -185,6 +187,32 @@ const CreateBooking = () => {
       const { error } = await supabase.from("bookings").insert(bookingData);
 
       if (error) throw error;
+
+      // Send booking confirmation email to customer
+      try {
+        const serviceLabels: Record<string, string> = {
+          residential: "Residential Cleaning",
+          commercial: "Commercial Cleaning",
+          deep_clean: "Deep Cleaning",
+          carpet_clean: "Carpet Cleaning",
+          window_clean: "Window Cleaning",
+          end_of_lease: "End of Lease",
+        };
+        
+        await emailService.sendBookingConfirmation(result.data.email, {
+          first_name: result.data.first_name,
+          last_name: result.data.last_name,
+          email: result.data.email,
+          phone: result.data.phone,
+          service_type: serviceLabels[formData.service_type] || formData.service_type,
+          property_type: formData.property_type,
+          preferred_date: formData.preferred_date ? format(new Date(formData.preferred_date), "PPP") : "TBD",
+          service_address: result.data.service_address,
+          notes: result.data.notes,
+        });
+      } catch (e) {
+        console.error("Failed to send booking email:", e);
+      }
 
       toast({ title: "Success", description: "Booking created successfully" });
       navigate("/admin/bookings");

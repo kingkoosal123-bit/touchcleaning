@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,6 +24,145 @@ interface CreateUserRequest {
     can_view_reports?: boolean;
     can_edit_settings?: boolean;
   };
+  sendEmail?: boolean;
+}
+
+const GMAIL_USER = Deno.env.get("GMAIL_USER") || "info@touchcleaning.com.au";
+const GMAIL_APP_PASSWORD = Deno.env.get("GMAIL_APP_PASSWORD");
+
+async function sendAccountCreatedEmail(
+  to: string,
+  fullName: string,
+  role: string,
+  tempPassword: string
+): Promise<void> {
+  if (!GMAIL_APP_PASSWORD) {
+    console.log("Gmail not configured, skipping email");
+    return;
+  }
+
+  const roleLabels: Record<string, string> = {
+    customer: 'Customer',
+    staff: 'Staff Member',
+    admin: 'Administrator',
+    manager: 'Manager'
+  };
+  const roleLabel = roleLabels[role] || role;
+
+  const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Touch Cleaning</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f4f7fa;">
+  <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f4f7fa; padding: 40px 20px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" style="max-width: 600px; width: 100%; border-collapse: collapse; background-color: #ffffff; border-radius: 16px; box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08); overflow: hidden;">
+          <tr>
+            <td style="background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); padding: 32px 40px; text-align: center;">
+              <h1 style="margin: 0; font-size: 28px; font-weight: 700; color: #ffffff;">Touch Cleaning</h1>
+              <p style="margin: 8px 0 0; font-size: 14px; color: rgba(255, 255, 255, 0.9);">Professional Cleaning Services</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 40px;">
+              <div style="text-align: center; margin-bottom: 32px;">
+                <div style="width: 64px; height: 64px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
+                  <span style="font-size: 32px;">👋</span>
+                </div>
+                <h2 style="margin: 0 0 8px; font-size: 24px; font-weight: 700; color: #1e293b;">Welcome to Touch Cleaning!</h2>
+                <p style="margin: 0; font-size: 15px; color: #64748b;">Your ${roleLabel} account has been created</p>
+              </div>
+              
+              <p style="margin: 0 0 24px; font-size: 15px; color: #475569; line-height: 1.6;">
+                Hi ${fullName},<br><br>
+                Your account has been successfully created. Here are your login details:
+              </p>
+              
+              <div style="background-color: #f8fafc; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+                <h3 style="margin: 0 0 16px; font-size: 16px; font-weight: 600; color: #334155;">Account Details</h3>
+                <table style="width: 100%; border-collapse: collapse;">
+                  <tr>
+                    <td style="padding: 8px 0; font-size: 14px; color: #64748b;">Email</td>
+                    <td style="padding: 8px 0; font-size: 14px; color: #1e293b; font-weight: 500; text-align: right;">${to}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px 0; font-size: 14px; color: #64748b;">Role</td>
+                    <td style="padding: 8px 0; font-size: 14px; color: #1e293b; font-weight: 500; text-align: right;">${roleLabel}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px 0; font-size: 14px; color: #64748b;">Temporary Password</td>
+                    <td style="padding: 8px 0; font-size: 14px; color: #dc2626; font-weight: 600; text-align: right;">${tempPassword}</td>
+                  </tr>
+                </table>
+              </div>
+              
+              <div style="background-color: #fef2f2; border-radius: 12px; padding: 20px; margin-bottom: 24px; border-left: 4px solid #ef4444;">
+                <p style="margin: 0; font-size: 14px; color: #991b1b;">
+                  <strong>⚠️ Important:</strong> Please change your password after your first login for security purposes.
+                </p>
+              </div>
+              
+              <div style="text-align: center;">
+                <a href="https://touchcleaning.lovable.app/auth" style="display: inline-block; background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); color: #ffffff; font-size: 14px; font-weight: 600; text-decoration: none; padding: 14px 40px; border-radius: 8px;">
+                  Sign In to Your Account
+                </a>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color: #f8fafc; padding: 32px 40px; border-top: 1px solid #e2e8f0;">
+              <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="text-align: center;">
+                    <p style="margin: 0 0 16px; font-size: 14px; color: #64748b;">
+                      <strong style="color: #334155;">Touch Cleaning</strong><br>
+                      Professional Cleaning Services
+                    </p>
+                    <p style="margin: 0; font-size: 12px; color: #94a3b8;">
+                      © ${new Date().getFullYear()} Touch Cleaning. All rights reserved.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `;
+
+  const client = new SMTPClient({
+    connection: {
+      hostname: "smtp.gmail.com",
+      port: 465,
+      tls: true,
+      auth: {
+        username: GMAIL_USER,
+        password: GMAIL_APP_PASSWORD,
+      },
+    },
+  });
+
+  try {
+    await client.send({
+      from: `Touch Cleaning <${GMAIL_USER}>`,
+      to: to,
+      subject: `Welcome to Touch Cleaning - Your ${roleLabel} Account`,
+      content: "Please enable HTML to view this email.",
+      html: html,
+    });
+    console.log(`Account creation email sent to ${to}`);
+  } finally {
+    await client.close();
+  }
 }
 
 serve(async (req) => {
@@ -70,7 +210,7 @@ serve(async (req) => {
     }
 
     const body: CreateUserRequest = await req.json();
-    const { email, password, fullName, phone, role, adminLevel, department, permissions } = body;
+    const { email, password, fullName, phone, role, adminLevel, department, permissions, sendEmail = true } = body;
 
     // Validate required fields
     if (!email || !password || !fullName || !role) {
@@ -169,6 +309,16 @@ serve(async (req) => {
             user_id: userId,
             employee_id: "EMP-" + userId.substring(0, 6).toUpperCase(),
           });
+      }
+    }
+
+    // Send account creation email
+    if (sendEmail) {
+      try {
+        await sendAccountCreatedEmail(email, fullName, role, password);
+      } catch (emailError) {
+        console.error("Failed to send account creation email:", emailError);
+        // Don't fail the request if email fails
       }
     }
 

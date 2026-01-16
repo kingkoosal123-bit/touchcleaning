@@ -9,6 +9,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { emailService } from "@/lib/email";
 import { z } from "zod";
 
 const contactSchema = z.object({
@@ -63,6 +64,15 @@ const Contact = () => {
       setLoading(false);
       return;
     }
+
+    // Send confirmation email to customer
+    await emailService.sendEnquiryConfirmation(validation.data.email, {
+      name: validation.data.name,
+      email: validation.data.email,
+      phone: validation.data.phone,
+      service_interest: validation.data.service,
+      message: validation.data.message,
+    });
 
     toast.success("Message sent successfully! We'll get back to you soon.");
     setFormData({ name: "", email: "", phone: "", service: "", message: "" });
