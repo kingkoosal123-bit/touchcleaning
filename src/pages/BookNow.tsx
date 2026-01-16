@@ -19,6 +19,7 @@ import { CalendarIcon } from "lucide-react";
 import { format, addDays, addWeeks, addMonths } from "date-fns";
 import { cn } from "@/lib/utils";
 import { z } from "zod";
+import { emailService } from "@/lib/email";
 
 const bookingSchema = z.object({
   firstName: z.string().trim().min(1, "First name is required").max(50, "First name must be less than 50 characters"),
@@ -177,6 +178,25 @@ const BookNow = () => {
         description: "Failed to create booking. Please try again.",
       });
     } else {
+      // Send booking confirmation email
+      try {
+        await emailService.sendBookingConfirmation(result.data.email, {
+          first_name: result.data.firstName,
+          last_name: result.data.lastName,
+          email: result.data.email,
+          phone: result.data.phone,
+          service_type: SERVICES.find(s => s.id === primaryService)?.label || primaryService,
+          property_type: propertyType,
+          preferred_date: format(startDate, "PPP"),
+          service_address: result.data.address,
+          booking_type: BOOKING_TYPES.find(t => t.id === bookingType)?.label || bookingType,
+          selected_services: selectedServices.map(id => SERVICES.find(s => s.id === id)?.label || id),
+          notes: result.data.notes,
+        });
+      } catch (e) {
+        console.error("Failed to send booking confirmation email:", e);
+      }
+      
       toast({
         title: "Success!",
         description: "Your booking has been submitted. We'll contact you shortly.",

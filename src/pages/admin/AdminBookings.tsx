@@ -32,6 +32,7 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { Search, Eye, UserPlus, MapPin } from "lucide-react";
 import { Database } from "@/integrations/supabase/types";
+import { emailService } from "@/lib/email";
 
 type BookingStatus = Database["public"]["Enums"]["booking_status"];
 
@@ -56,6 +57,7 @@ interface Booking {
 interface StaffMember {
   id: string;
   full_name: string;
+  email?: string;
 }
 
 const AdminBookings = () => {
@@ -97,6 +99,7 @@ const AdminBookings = () => {
         .select("id, full_name")
         .in("id", staffIds);
 
+      // Get staff emails from auth (we'll fetch from the booking assignment flow)
       if (profiles) {
         setStaff(profiles.map((p) => ({ id: p.id, full_name: p.full_name || "Unnamed" })));
       }
@@ -121,6 +124,10 @@ const AdminBookings = () => {
   };
 
   const assignStaff = async (bookingId: string, staffId: string) => {
+    // Get booking details first
+    const booking = bookings.find(b => b.id === bookingId);
+    if (!booking) return;
+
     const { error } = await supabase
       .from("bookings")
       .update({ staff_id: staffId, status: "confirmed" as BookingStatus })
@@ -130,6 +137,34 @@ const AdminBookings = () => {
       toast({ variant: "destructive", title: "Error", description: "Failed to assign staff" });
     } else {
       toast({ title: "Success", description: "Staff assigned successfully" });
+      
+      // Get staff email and send notification
+      const staffMember = staff.find(s => s.id === staffId);
+      
+      // Fetch staff email from profiles or auth
+      const { data: staffProfile } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", staffId)
+        .single();
+
+      // Send work assignment email via edge function
+      try {
+        await emailService.sendWorkAssignment(booking.email, {
+          service_type: booking.service_type.replace(/_/g, " "),
+          property_type: booking.property_type,
+          preferred_date: format(new Date(booking.preferred_date), "PPP"),
+          service_address: booking.service_address,
+          estimated_hours: booking.estimated_hours,
+          customer_name: `${booking.first_name} ${booking.last_name}`,
+          customer_phone: booking.phone,
+          notes: booking.notes,
+          staff_name: staffProfile?.full_name || staffMember?.full_name || "Staff Member",
+        });
+      } catch (e) {
+        console.error("Failed to send work assignment email:", e);
+      }
+      
       fetchBookings();
     }
   };
