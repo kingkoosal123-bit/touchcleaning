@@ -100,12 +100,18 @@ const BookNow = () => {
     }
   }, [startDate, bookingType]);
 
-  const handleServiceToggle = (serviceId: string) => {
-    setSelectedServices(prev => 
-      prev.includes(serviceId) 
-        ? prev.filter(s => s !== serviceId)
-        : [...prev, serviceId]
-    );
+  const setServiceChecked = (serviceId: string, checked: boolean) => {
+    setSelectedServices((prev) => {
+      const has = prev.includes(serviceId);
+      if (checked && !has) return [...prev, serviceId];
+      if (!checked && has) return prev.filter((s) => s !== serviceId);
+      return prev;
+    });
+  };
+
+  const toggleService = (serviceId: string) => {
+    const nextChecked = !selectedServices.includes(serviceId);
+    setServiceChecked(serviceId, nextChecked);
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -295,20 +301,22 @@ const BookNow = () => {
                   <h3 className="text-lg font-semibold text-foreground">Select Services * (Choose one or more)</h3>
                   <div className="grid sm:grid-cols-2 gap-3">
                     {SERVICES.map((service) => (
-                      <div 
-                        key={service.id} 
+                      <div
+                        key={service.id}
                         className={cn(
                           "flex items-start space-x-3 p-4 border rounded-lg cursor-pointer transition-all",
-                          selectedServices.includes(service.id) 
-                            ? "border-primary bg-primary/5" 
-                            : "border-border hover:border-primary/50"
+                          selectedServices.includes(service.id)
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:border-primary/50",
                         )}
-                        onClick={() => handleServiceToggle(service.id)}
+                        onClick={() => toggleService(service.id)}
                       >
-                        <Checkbox 
+                        <Checkbox
                           id={service.id}
+                          type="button"
                           checked={selectedServices.includes(service.id)}
-                          onCheckedChange={() => handleServiceToggle(service.id)}
+                          onClick={(e) => e.stopPropagation()}
+                          onCheckedChange={(checked) => setServiceChecked(service.id, checked === true)}
                         />
                         <Label htmlFor={service.id} className="cursor-pointer text-sm leading-tight">
                           {service.label}
