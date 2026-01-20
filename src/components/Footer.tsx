@@ -88,7 +88,7 @@ const Footer = () => {
               </li>
               <li className="flex items-start space-x-3">
                 <Mail size={18} className="text-primary mt-0.5 flex-shrink-0" />
-                <span className="text-sm text-muted-foreground">touchcleaning.au@gmail.com</span>
+                <span className="text-sm text-muted-foreground">info@touchcleaning.com.au</span>
               </li>
             </ul>
             <div className="flex space-x-4 mt-6">
