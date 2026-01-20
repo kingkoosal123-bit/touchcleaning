@@ -21,7 +21,7 @@ const CreateAdmin = () => {
     password: "",
     fullName: "",
     phone: "",
-    adminLevel: "standard",
+    adminLevel: "admin",
     department: "",
   });
   const [permissions, setPermissions] = useState({
@@ -42,14 +42,44 @@ const CreateAdmin = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validation
+    if (!formData.email || !formData.password || !formData.fullName) {
+      toast({
+        variant: "destructive",
+        title: "Missing Fields",
+        description: "Please fill in all required fields.",
+      });
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Password",
+        description: "Password must be at least 6 characters.",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        throw new Error("Not authenticated");
+        throw new Error("Not authenticated. Please log in again.");
       }
+
+      console.log("Creating admin with data:", {
+        email: formData.email,
+        fullName: formData.fullName,
+        phone: formData.phone,
+        role: "admin",
+        adminLevel: formData.adminLevel,
+        department: formData.department || null,
+        permissions: permissions,
+      });
 
       // Call edge function to create admin user
       const response = await supabase.functions.invoke("create-user-with-role", {
@@ -65,11 +95,15 @@ const CreateAdmin = () => {
         },
       });
 
+      console.log("Edge function response:", response);
+
       if (response.error) {
+        console.error("Edge function error:", response.error);
         throw new Error(response.error.message || "Failed to create admin");
       }
 
       if (!response.data?.success) {
+        console.error("Edge function failed:", response.data);
         throw new Error(response.data?.error || "Failed to create admin");
       }
 
@@ -79,6 +113,7 @@ const CreateAdmin = () => {
       });
       navigate("/admin/managers");
     } catch (error: any) {
+      console.error("Create admin error:", error);
       toast({
         variant: "destructive",
         title: "Error",

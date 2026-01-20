@@ -8,12 +8,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Calendar, MapPin, User } from "lucide-react";
+import { ArrowLeft, Calendar as CalendarIcon, MapPin, User } from "lucide-react";
 import { Link } from "react-router-dom";
 import { z } from "zod";
-import { format } from "date-fns";
+import { format, addWeeks, addMonths } from "date-fns";
 import { emailService } from "@/lib/email";
+import { cn } from "@/lib/utils";
 
 const adminBookingSchema = z.object({
   first_name: z.string().trim().min(1, "First name is required").max(50, "First name must be less than 50 characters"),
@@ -38,21 +43,41 @@ interface StaffMember {
   full_name: string;
 }
 
+const SERVICES = [
+  { id: "commercial", label: "Commercial, Office & Housekeeping" },
+  { id: "floor_scrub", label: "Floor Scrub, Strip & Sealing" },
+  { id: "school_childcare", label: "School, Childcare & Aged Care Cleaning" },
+  { id: "hospitality", label: "Hospitality, Pub, Nightclub & Event Cleaning" },
+  { id: "window_construction", label: "Professional Window & Construction Cleaning" },
+  { id: "pressure_lawn", label: "High Pressure and Lawn Mowing" },
+  { id: "domestic_lease", label: "Domestic & End of Lease Cleaning" },
+  { id: "strata_apartment", label: "Strata, Apartment & Regular House Cleaning" },
+];
+
+const BOOKING_TYPES = [
+  { id: "day", label: "One-time (Single Day)", description: "Single cleaning service" },
+  { id: "weekly", label: "Weekly", description: "Recurring every week" },
+  { id: "monthly", label: "Monthly", description: "Recurring every month" },
+  { id: "contract", label: "Contract", description: "Long-term agreement" },
+];
+
 const CreateBooking = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const [bookingType, setBookingType] = useState("day");
+  const [startDate, setStartDate] = useState<Date>();
+  const [endDate, setEndDate] = useState<Date>();
   const [formData, setFormData] = useState({
     customer_id: "",
     first_name: "",
     last_name: "",
     email: "",
     phone: "",
-    service_type: "" as "residential" | "commercial" | "deep_clean" | "carpet_clean" | "window_clean" | "end_of_lease" | "",
     property_type: "" as "apartment" | "house" | "office" | "retail" | "industrial" | "",
     service_address: "",
-    preferred_date: "",
     staff_id: "",
     estimated_hours: "",
     estimated_cost: "",
@@ -64,6 +89,25 @@ const CreateBooking = () => {
   useEffect(() => {
     fetchCustomersAndStaff();
   }, []);
+
+  // Auto-calculate end date based on booking type
+  useEffect(() => {
+    if (startDate && bookingType !== "day") {
+      switch (bookingType) {
+        case "weekly":
+          setEndDate(addWeeks(startDate, 4));
+          break;
+        case "monthly":
+          setEndDate(addMonths(startDate, 3));
+          break;
+        case "contract":
+          setEndDate(addMonths(startDate, 12));
+          break;
+      }
+    } else if (bookingType === "day") {
+      setEndDate(undefined);
+    }
+  }, [startDate, bookingType]);
 
   const fetchCustomersAndStaff = async () => {
     // Fetch customers
@@ -130,11 +174,19 @@ const CreateBooking = () => {
     }
   };
 
+  const handleServiceToggle = (serviceId: string) => {
+    setSelectedServices(prev => 
+      prev.includes(serviceId) 
+        ? prev.filter(s => s !== serviceId)
+        : [...prev, serviceId]
+    );
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.service_type || !formData.property_type) {
-      toast({ variant: "destructive", title: "Error", description: "Please select service and property type" });
+    if (selectedServices.length === 0 || !formData.property_type || !startDate) {
+      toast({ variant: "destructive", title: "Error", description: "Please select at least one service, property type, and date" });
       return;
     }
 
@@ -166,6 +218,21 @@ const CreateBooking = () => {
     setErrors({});
     setIsLoading(true);
 
+    // Map new service IDs to valid DB enum values
+    const serviceToEnumMap: Record<string, string> = {
+      commercial: "commercial",
+      floor_scrub: "deep_clean",
+      school_childcare: "commercial",
+      hospitality: "commercial",
+      window_construction: "window_clean",
+      pressure_lawn: "residential",
+      domestic_lease: "end_of_lease",
+      strata_apartment: "residential",
+    };
+
+    const primaryService = selectedServices[0];
+    const mappedServiceType = serviceToEnumMap[primaryService] || "residential";
+
     try {
       const bookingData = {
         customer_id: formData.customer_id,
@@ -173,10 +240,13 @@ const CreateBooking = () => {
         last_name: result.data.last_name,
         email: result.data.email,
         phone: result.data.phone,
-        service_type: formData.service_type as "residential" | "commercial" | "deep_clean" | "carpet_clean" | "window_clean" | "end_of_lease",
+        service_type: mappedServiceType as "residential" | "commercial" | "deep_clean" | "carpet_clean" | "window_clean" | "end_of_lease",
         property_type: formData.property_type as "apartment" | "house" | "office" | "retail" | "industrial",
         service_address: result.data.service_address,
-        preferred_date: formData.preferred_date,
+        preferred_date: format(startDate, "yyyy-MM-dd"),
+        end_date: endDate ? format(endDate, "yyyy-MM-dd") : null,
+        booking_type: bookingType,
+        selected_services: selectedServices,
         staff_id: formData.staff_id || null,
         estimated_hours: result.data.estimated_hours,
         estimated_cost: result.data.estimated_cost,
@@ -190,24 +260,17 @@ const CreateBooking = () => {
 
       // Send booking confirmation email to customer
       try {
-        const serviceLabels: Record<string, string> = {
-          residential: "Residential Cleaning",
-          commercial: "Commercial Cleaning",
-          deep_clean: "Deep Cleaning",
-          carpet_clean: "Carpet Cleaning",
-          window_clean: "Window Cleaning",
-          end_of_lease: "End of Lease",
-        };
-        
         await emailService.sendBookingConfirmation(result.data.email, {
           first_name: result.data.first_name,
           last_name: result.data.last_name,
           email: result.data.email,
           phone: result.data.phone,
-          service_type: serviceLabels[formData.service_type] || formData.service_type,
+          service_type: SERVICES.find(s => s.id === primaryService)?.label || primaryService,
           property_type: formData.property_type,
-          preferred_date: formData.preferred_date ? format(new Date(formData.preferred_date), "PPP") : "TBD",
+          preferred_date: format(startDate, "PPP"),
           service_address: result.data.service_address,
+          booking_type: BOOKING_TYPES.find(t => t.id === bookingType)?.label || bookingType,
+          selected_services: selectedServices.map(id => SERVICES.find(s => s.id === id)?.label || id),
           notes: result.data.notes,
         });
       } catch (e) {
@@ -225,7 +288,7 @@ const CreateBooking = () => {
 
   return (
     <AdminLayout>
-      <div className="max-w-3xl mx-auto space-y-6">
+      <div className="max-w-4xl mx-auto space-y-6">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" asChild>
             <Link to="/admin/bookings"><ArrowLeft className="h-4 w-4" /></Link>
@@ -281,44 +344,148 @@ const CreateBooking = () => {
             </CardContent>
           </Card>
 
+          {/* Booking Type */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2"><Calendar className="h-5 w-5" /> Service Details</CardTitle>
+              <CardTitle>Booking Type</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <RadioGroup value={bookingType} onValueChange={setBookingType} className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {BOOKING_TYPES.map((type) => (
+                  <div key={type.id} className="relative">
+                    <RadioGroupItem value={type.id} id={`admin-${type.id}`} className="peer sr-only" />
+                    <Label
+                      htmlFor={`admin-${type.id}`}
+                      className="flex flex-col items-center justify-center p-4 border-2 rounded-lg cursor-pointer transition-all peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 hover:border-primary/50"
+                    >
+                      <span className="font-medium text-sm text-center">{type.label}</span>
+                      <span className="text-xs text-muted-foreground text-center mt-1">{type.description}</span>
+                    </Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            </CardContent>
+          </Card>
+
+          {/* Services Selection */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Select Services * (Choose one or more)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid sm:grid-cols-2 gap-3">
+                {SERVICES.map((service) => (
+                  <div 
+                    key={service.id} 
+                    className={cn(
+                      "flex items-start space-x-3 p-4 border rounded-lg cursor-pointer transition-all",
+                      selectedServices.includes(service.id) 
+                        ? "border-primary bg-primary/5" 
+                        : "border-border hover:border-primary/50"
+                    )}
+                    onClick={() => handleServiceToggle(service.id)}
+                  >
+                    <Checkbox 
+                      id={`admin-service-${service.id}`}
+                      checked={selectedServices.includes(service.id)}
+                      onCheckedChange={() => handleServiceToggle(service.id)}
+                    />
+                    <Label htmlFor={`admin-service-${service.id}`} className="cursor-pointer text-sm leading-tight">
+                      {service.label}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+              {selectedServices.length === 0 && (
+                <p className="text-sm text-muted-foreground mt-2">Please select at least one service</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Property & Schedule */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><CalendarIcon className="h-5 w-5" /> Property & Schedule</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <Label>Service Type *</Label>
-                  <Select value={formData.service_type} onValueChange={(v) => setFormData({ ...formData, service_type: v as any })}>
-                    <SelectTrigger><SelectValue placeholder="Select service" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="residential">Residential Cleaning</SelectItem>
-                      <SelectItem value="commercial">Commercial Cleaning</SelectItem>
-                      <SelectItem value="deep_clean">Deep Cleaning</SelectItem>
-                      <SelectItem value="carpet_clean">Carpet Cleaning</SelectItem>
-                      <SelectItem value="window_clean">Window Cleaning</SelectItem>
-                      <SelectItem value="end_of_lease">End of Lease</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Property Type *</Label>
-                  <Select value={formData.property_type} onValueChange={(v) => setFormData({ ...formData, property_type: v as any })}>
-                    <SelectTrigger><SelectValue placeholder="Select property" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="apartment">Apartment</SelectItem>
-                      <SelectItem value="house">House</SelectItem>
-                      <SelectItem value="office">Office</SelectItem>
-                      <SelectItem value="retail">Retail</SelectItem>
-                      <SelectItem value="industrial">Industrial</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
               <div>
-                <Label>Preferred Date *</Label>
-                <Input type="date" value={formData.preferred_date} onChange={(e) => setFormData({ ...formData, preferred_date: e.target.value })} required />
+                <Label>Property Type *</Label>
+                <Select value={formData.property_type} onValueChange={(v) => setFormData({ ...formData, property_type: v as any })}>
+                  <SelectTrigger><SelectValue placeholder="Select property type" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="apartment">Apartment</SelectItem>
+                    <SelectItem value="house">House</SelectItem>
+                    <SelectItem value="office">Office</SelectItem>
+                    <SelectItem value="retail">Retail Space</SelectItem>
+                    <SelectItem value="industrial">Industrial</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
+
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>{bookingType === "day" ? "Service Date *" : "Start Date *"}</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !startDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {startDate ? format(startDate, "PPP") : "Pick a date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={startDate}
+                        onSelect={setStartDate}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                {bookingType !== "day" && (
+                  <div className="space-y-2">
+                    <Label>End Date</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !endDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {endDate ? format(endDate, "PPP") : "Pick end date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={endDate}
+                          onSelect={setEndDate}
+                          disabled={(date) => (startDate && date < startDate)}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <p className="text-xs text-muted-foreground">
+                      {bookingType === "weekly" && "Service will repeat weekly until end date"}
+                      {bookingType === "monthly" && "Service will repeat monthly until end date"}
+                      {bookingType === "contract" && "Contract period end date"}
+                    </p>
+                  </div>
+                )}
+              </div>
+
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <Label>Estimated Hours</Label>
@@ -339,7 +506,7 @@ const CreateBooking = () => {
             <CardContent className="space-y-4">
               <div>
                 <Label>Service Address *</Label>
-                <Input value={formData.service_address} onChange={(e) => setFormData({ ...formData, service_address: e.target.value })} required maxLength={500} />
+                <Input value={formData.service_address} onChange={(e) => setFormData({ ...formData, service_address: e.target.value })} placeholder="123 Main St, Sydney NSW 2000" required maxLength={500} />
                 {errors.service_address && <p className="text-sm text-destructive">{errors.service_address}</p>}
               </div>
               <div>
@@ -361,7 +528,7 @@ const CreateBooking = () => {
             </CardContent>
           </Card>
 
-          <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
+          <Button type="submit" className="w-full" size="lg" disabled={isLoading || selectedServices.length === 0 || !formData.property_type || !startDate}>
             {isLoading ? "Creating..." : "Create Booking"}
           </Button>
         </form>

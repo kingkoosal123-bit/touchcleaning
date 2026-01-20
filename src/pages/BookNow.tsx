@@ -150,8 +150,21 @@ const BookNow = () => {
     setErrors({});
     setLoading(true);
 
+    // Map new service IDs to valid DB enum values
+    const serviceToEnumMap: Record<string, string> = {
+      commercial: "commercial",
+      floor_scrub: "deep_clean",
+      school_childcare: "commercial",
+      hospitality: "commercial",
+      window_construction: "window_clean",
+      pressure_lawn: "residential",
+      domestic_lease: "end_of_lease",
+      strata_apartment: "residential",
+    };
+
     // Use first selected service as primary service_type for backwards compatibility
     const primaryService = selectedServices[0];
+    const mappedServiceType = serviceToEnumMap[primaryService] || "residential";
 
     const { error } = await supabase.from("bookings").insert([{
       customer_id: user.id,
@@ -159,7 +172,7 @@ const BookNow = () => {
       last_name: result.data.lastName,
       email: result.data.email,
       phone: result.data.phone,
-      service_type: primaryService as any,
+      service_type: mappedServiceType as "residential" | "commercial" | "deep_clean" | "carpet_clean" | "window_clean" | "end_of_lease",
       property_type: propertyType as "apartment" | "house" | "office" | "retail" | "industrial",
       service_address: result.data.address,
       preferred_date: format(startDate, "yyyy-MM-dd"),
