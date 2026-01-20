@@ -113,7 +113,7 @@ const Locations = () => {
                   <MapPin className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
                   <div>
                     <p className="font-semibold text-foreground">Head Office</p>
-                    <p className="text-muted-foreground">21 Thorncraft Parade, Campsie NSW 2194</p>
+                    <p className="text-muted-foreground">52 Bexley Rd, Campsie NSW 2194</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">

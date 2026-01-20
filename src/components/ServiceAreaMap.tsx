@@ -14,7 +14,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-const ADDRESS = "21 Thorncraft Parade, Campsie NSW 2194, Australia";
+const ADDRESS = "52 Bexley Rd, Campsie NSW 2194, Australia";
 const RADIUS_METERS = 50_000;
 
 export default function ServiceAreaMap() {
