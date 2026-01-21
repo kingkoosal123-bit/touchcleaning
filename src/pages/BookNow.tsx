@@ -109,10 +109,10 @@ const BookNow = () => {
     });
   };
 
-  const toggleService = (serviceId: string) => {
-    const nextChecked = !selectedServices.includes(serviceId);
-    setServiceChecked(serviceId, nextChecked);
-  };
+  // NOTE: Service selection should be driven by a single source of truth.
+  // We intentionally avoid container onClick handlers because clicking the text label
+  // can also trigger an implicit click on the checkbox (via label behavior), causing
+  // double toggles and occasional crashes.
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -304,18 +304,15 @@ const BookNow = () => {
                       <div
                         key={service.id}
                         className={cn(
-                          "flex items-start space-x-3 p-4 border rounded-lg cursor-pointer transition-all",
+                          "flex items-start space-x-3 p-4 border rounded-lg transition-all",
                           selectedServices.includes(service.id)
                             ? "border-primary bg-primary/5"
                             : "border-border hover:border-primary/50",
                         )}
-                        onClick={() => toggleService(service.id)}
                       >
                         <Checkbox
                           id={service.id}
-                          type="button"
                           checked={selectedServices.includes(service.id)}
-                          onClick={(e) => e.stopPropagation()}
                           onCheckedChange={(checked) => setServiceChecked(service.id, checked === true)}
                         />
                         <Label htmlFor={service.id} className="cursor-pointer text-sm leading-tight">
