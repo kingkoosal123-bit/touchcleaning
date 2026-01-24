@@ -5,7 +5,7 @@ import { StaffLayout } from "./StaffLayout";
 
 export const StaffProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
-  const { isStaff, isAdmin, loading: roleLoading } = useUserRole();
+  const { isStaff, isAdmin, isCustomer, loading: roleLoading } = useUserRole();
 
   if (loading || roleLoading) {
     return (
@@ -22,9 +22,19 @@ export const StaffProtectedRoute = ({ children }: { children: React.ReactNode })
     return <Navigate to="/auth" replace />;
   }
 
-  // Allow staff and admin to access
-  if (!isStaff && !isAdmin) {
+  // Strict role enforcement: redirect admins to admin portal
+  if (isAdmin) {
+    return <Navigate to="/admin" replace />;
+  }
+
+  // Redirect customers to their dashboard
+  if (isCustomer) {
     return <Navigate to="/dashboard" replace />;
+  }
+
+  // Only staff can access
+  if (!isStaff) {
+    return <Navigate to="/auth" replace />;
   }
 
   return <StaffLayout>{children}</StaffLayout>;

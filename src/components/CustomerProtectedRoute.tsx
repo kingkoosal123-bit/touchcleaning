@@ -2,7 +2,7 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 
-export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+export const CustomerProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   const { isCustomer, isAdmin, isStaff, loading: roleLoading } = useUserRole();
 
@@ -18,7 +18,7 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     return <Navigate to="/auth" replace />;
   }
 
-  // Strict role enforcement: redirect admins/staff to their proper portals
+  // Strict role enforcement: redirect non-customers to their proper portal
   if (isAdmin) {
     return <Navigate to="/admin" replace />;
   }
@@ -27,6 +27,10 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     return <Navigate to="/staff" replace />;
   }
 
-  // Only customers can access customer-protected routes
+  // Only customers can access
+  if (!isCustomer) {
+    return <Navigate to="/auth" replace />;
+  }
+
   return <>{children}</>;
 };
