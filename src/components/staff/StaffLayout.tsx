@@ -24,6 +24,7 @@ import {
   Home,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useInactivityTimeout } from "@/hooks/useInactivityTimeout";
 
 const sidebarItems = [
   { title: "My Jobs", href: "/staff", icon: Briefcase, end: true },
@@ -36,6 +37,9 @@ export const StaffLayout = ({ children }: { children: React.ReactNode }) => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Auto-logout after 15 minutes of inactivity
+  useInactivityTimeout();
 
   const handleSignOut = async () => {
     await signOut();

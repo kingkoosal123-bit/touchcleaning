@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AdminSidebar } from "./AdminSidebar";
 import { AdminHeader } from "./AdminHeader";
 import { AdminPermissionsProvider } from "@/contexts/AdminPermissionsContext";
+import { useInactivityTimeout } from "@/hooks/useInactivityTimeout";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -13,6 +14,9 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [adminName, setAdminName] = useState("");
+
+  // Auto-logout after 15 minutes of inactivity
+  useInactivityTimeout();
 
   useEffect(() => {
     const checkAdmin = async () => {
