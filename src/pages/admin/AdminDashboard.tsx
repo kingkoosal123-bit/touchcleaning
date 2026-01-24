@@ -373,7 +373,7 @@ const AdminDashboard = () => {
           <Button asChild variant="outline" className="h-auto py-4">
             <Link to="/admin/analytics" className="flex flex-col items-center gap-2">
               <TrendingUp className="h-6 w-6" />
-              <span>View Reports</span>
+              <span>View Analytics</span>
             </Link>
           </Button>
         </div>

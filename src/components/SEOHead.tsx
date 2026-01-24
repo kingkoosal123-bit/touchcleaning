@@ -1,10 +1,13 @@
 import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 
 interface SEOHeadProps {
   title?: string;
   description?: string;
   keywords?: string;
   page?: string;
+  ogImage?: string;
+  noIndex?: boolean;
 }
 
 const defaultSEO = {
@@ -38,51 +41,100 @@ const defaultSEO = {
     description: "Professional cleaning services across Sydney and New South Wales. Find out if we serve your area and get a free quote today.",
     keywords: "cleaning services Sydney areas, NSW cleaning service locations, local cleaners Sydney",
   },
+  blog: {
+    title: "Cleaning Tips & News - Touch Cleaning Australia Blog",
+    description: "Expert cleaning tips, industry news, and helpful guides from Touch Cleaning Australia. Learn how to keep your space spotless.",
+    keywords: "cleaning tips, cleaning blog, professional cleaning advice, Sydney cleaning news",
+  },
+  team: {
+    title: "Our Team - Touch Cleaning Australia",
+    description: "Meet the dedicated professionals behind Touch Cleaning Australia. Our experienced team delivers exceptional cleaning services.",
+    keywords: "cleaning team, professional cleaners, Touch Cleaning staff, Sydney cleaning experts",
+  },
 };
 
-export const SEOHead = ({ title, description, keywords, page }: SEOHeadProps) => {
+export const SEOHead = ({ title, description, keywords, page, ogImage, noIndex }: SEOHeadProps) => {
+  const location = useLocation();
+
   useEffect(() => {
     // Load custom SEO settings from localStorage
     const saved = localStorage.getItem("seo-settings");
     let customSEO = null;
     
     if (saved && page) {
-      const settings = JSON.parse(saved);
-      customSEO = settings.find((s: any) => s.page === page);
+      try {
+        const settings = JSON.parse(saved);
+        customSEO = settings.find((s: any) => s.page === page);
+      } catch {
+        // Ignore parse errors
+      }
     }
 
     // Use custom settings, props, or defaults
     const finalTitle = title || customSEO?.title || (page && defaultSEO[page as keyof typeof defaultSEO]?.title) || "Touch Cleaning Australia";
     const finalDescription = description || customSEO?.description || (page && defaultSEO[page as keyof typeof defaultSEO]?.description) || "Professional cleaning services in Sydney, NSW";
     const finalKeywords = keywords || customSEO?.keywords || (page && defaultSEO[page as keyof typeof defaultSEO]?.keywords) || "cleaning services, Sydney cleaners";
+    const finalOgImage = ogImage || "https://touchcleaning.com.au/og-image.png";
+    const canonicalUrl = `https://touchcleaning.com.au${location.pathname}`;
 
     // Update document title
     document.title = finalTitle;
 
     // Update or create meta tags
-    const updateMetaTag = (name: string, content: string) => {
-      let meta = document.querySelector(`meta[name="${name}"]`);
+    const updateMetaTag = (name: string, content: string, isProperty = false) => {
+      const selector = isProperty ? `meta[property="${name}"]` : `meta[name="${name}"]`;
+      let meta = document.querySelector(selector);
       if (!meta) {
         meta = document.createElement("meta");
-        meta.setAttribute("name", name);
+        meta.setAttribute(isProperty ? "property" : "name", name);
         document.head.appendChild(meta);
       }
       meta.setAttribute("content", content);
     };
 
+    // Standard meta tags
     updateMetaTag("description", finalDescription);
     updateMetaTag("keywords", finalKeywords);
+    
+    // Robots
+    if (noIndex) {
+      updateMetaTag("robots", "noindex, nofollow");
+    } else {
+      updateMetaTag("robots", "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1");
+    }
 
     // Open Graph tags for social sharing
-    updateMetaTag("og:title", finalTitle);
-    updateMetaTag("og:description", finalDescription);
-    updateMetaTag("og:type", "website");
+    updateMetaTag("og:title", finalTitle, true);
+    updateMetaTag("og:description", finalDescription, true);
+    updateMetaTag("og:type", "website", true);
+    updateMetaTag("og:url", canonicalUrl, true);
+    updateMetaTag("og:image", finalOgImage, true);
+    updateMetaTag("og:site_name", "Touch Cleaning Australia", true);
+    updateMetaTag("og:locale", "en_AU", true);
 
     // Twitter Card tags
     updateMetaTag("twitter:card", "summary_large_image");
     updateMetaTag("twitter:title", finalTitle);
     updateMetaTag("twitter:description", finalDescription);
-  }, [title, description, keywords, page]);
+    updateMetaTag("twitter:image", finalOgImage);
+
+    // Update canonical link
+    let canonical = document.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement("link");
+      canonical.setAttribute("rel", "canonical");
+      document.head.appendChild(canonical);
+    }
+    canonical.setAttribute("href", canonicalUrl);
+
+    // Track page view for analytics (if gtag available)
+    if (typeof window !== "undefined" && (window as any).gtag) {
+      (window as any).gtag("event", "page_view", {
+        page_path: location.pathname,
+        page_title: finalTitle,
+      });
+    }
+  }, [title, description, keywords, page, ogImage, noIndex, location.pathname]);
 
   return null;
 };
