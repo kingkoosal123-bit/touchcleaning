@@ -80,14 +80,13 @@ const App = () => (
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/bookings" element={<AdminBookings />} />
             <Route path="/admin/bookings/create" element={<CreateBooking />} />
-            <Route path="/admin/bookings/assign" element={<AdminBookings />} />
             <Route path="/admin/customers" element={<AdminCustomers />} />
             <Route path="/admin/managers" element={<AdminManagers />} />
+            <Route path="/admin/managers/create" element={<CreateAdmin />} />
             <Route path="/admin/staff" element={<AdminStaff />} />
+            <Route path="/admin/staff/create" element={<CreateStaff />} />
             <Route path="/admin/payroll" element={<AdminPayroll />} />
             <Route path="/admin/booking-payroll" element={<AdminBookingPayroll />} />
-            <Route path="/admin/users/create-staff" element={<CreateStaff />} />
-            <Route path="/admin/users/create-admin" element={<CreateAdmin />} />
             <Route path="/admin/seo" element={<AdminSEO />} />
             <Route path="/admin/cms/services" element={<AdminCMSServices />} />
             <Route path="/admin/cms/team" element={<AdminCMSTeam />} />

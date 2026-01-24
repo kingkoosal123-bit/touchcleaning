@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { RequirePermission } from "@/components/admin/RequirePermission";
+import { StatusBadge } from "@/components/admin/StatusBadge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -34,7 +35,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { Search, Eye, Clock, UserPlus, MapPin, Image, Pencil, Trash2 } from "lucide-react";
+import { Search, Eye, Clock, UserPlus, MapPin, Image, Pencil, Trash2, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface Staff {
@@ -216,14 +217,7 @@ const AdminStaff = () => {
   };
 
   const getStatusBadge = (status: string) => {
-    const colors: Record<string, string> = {
-      pending: "bg-yellow-500",
-      confirmed: "bg-blue-500",
-      in_progress: "bg-purple-500",
-      completed: "bg-green-500",
-      cancelled: "bg-red-500",
-    };
-    return <Badge className={`${colors[status] || "bg-gray-500"} text-white`}>{status.replace("_", " ")}</Badge>;
+    return <StatusBadge status={status} />;
   };
 
   const filteredStaff = staff.filter((s) => {
@@ -252,12 +246,18 @@ const AdminStaff = () => {
             <h1 className="text-2xl font-bold">Staff Management</h1>
             <p className="text-muted-foreground">Manage staff members who perform cleaning tasks</p>
           </div>
-          <Button asChild>
-            <Link to="/admin/staff/create">
-              <UserPlus className="h-4 w-4 mr-2" />
-              Add New Staff
-            </Link>
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={fetchStaff}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+            <Button asChild>
+              <Link to="/admin/staff/create">
+                <UserPlus className="h-4 w-4 mr-2" />
+                Add New Staff
+              </Link>
+            </Button>
+          </div>
         </div>
 
         {/* Stats Cards */}

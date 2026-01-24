@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { RequirePermission } from "@/components/admin/RequirePermission";
+import { StatusBadge } from "@/components/admin/StatusBadge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -35,7 +36,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { Search, Eye, Phone, MapPin, Pencil, Trash2 } from "lucide-react";
+import { Search, Eye, Phone, MapPin, Pencil, Trash2, RefreshCw } from "lucide-react";
 
 interface Customer {
   id: string;
@@ -174,14 +175,7 @@ const AdminCustomers = () => {
   };
 
   const getStatusBadge = (status: string) => {
-    const colors: Record<string, string> = {
-      pending: "bg-yellow-500",
-      confirmed: "bg-blue-500",
-      in_progress: "bg-purple-500",
-      completed: "bg-green-500",
-      cancelled: "bg-red-500",
-    };
-    return <Badge className={`${colors[status] || "bg-gray-500"} text-white`}>{status.replace("_", " ")}</Badge>;
+    return <StatusBadge status={status} />;
   };
 
   const filteredCustomers = customers.filter((customer) => {
@@ -206,9 +200,15 @@ const AdminCustomers = () => {
     <AdminLayout>
       <RequirePermission permission="can_manage_customers">
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold">Customer Database</h1>
-          <p className="text-muted-foreground">View and manage all customers who sign up via /auth</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Customer Database</h1>
+            <p className="text-muted-foreground">View and manage all customers who sign up via /auth</p>
+          </div>
+          <Button variant="outline" onClick={fetchCustomers}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
         </div>
 
         {/* Stats Cards */}
