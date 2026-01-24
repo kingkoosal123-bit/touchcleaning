@@ -132,21 +132,35 @@ const CreateBooking = () => {
       }
     }
 
-    // Fetch staff
+    // Fetch staff - get only active staff
     const { data: staffRoles } = await supabase
       .from("user_roles")
       .select("user_id")
       .eq("role", "staff");
 
-    if (staffRoles) {
+    if (staffRoles && staffRoles.length > 0) {
       const userIds = staffRoles.map(r => r.user_id);
+      
+      // Get profiles
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("id, full_name")
+        .select("id, full_name, phone")
         .in("id", userIds);
 
+      // Get staff details to check active status
+      const { data: staffDetails } = await supabase
+        .from("staff_details")
+        .select("user_id, is_active")
+        .in("user_id", userIds);
+
       if (profiles) {
-        setStaff(profiles.map(p => ({
+        // Only include active staff
+        const activeStaff = profiles.filter(p => {
+          const details = staffDetails?.find(d => d.user_id === p.id);
+          return details?.is_active !== false; // Include if active or no details found
+        });
+        
+        setStaff(activeStaff.map(p => ({
           id: p.id,
           full_name: p.full_name || "Unknown",
         })));
