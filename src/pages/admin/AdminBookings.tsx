@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { RequirePermission } from "@/components/admin/RequirePermission";
+import { StatusBadge } from "@/components/admin/StatusBadge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Table,
   TableBody,
@@ -28,12 +30,24 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { Search, Eye, UserPlus, MapPin, RefreshCw, Plus } from "lucide-react";
+import { Search, Eye, UserPlus, MapPin, RefreshCw, Plus, Pencil, Trash2 } from "lucide-react";
 import { Database } from "@/integrations/supabase/types";
 import { emailService } from "@/lib/email";
 import { Link } from "react-router-dom";
+import { fetchActiveStaff, StaffMember, formatServiceType } from "@/lib/admin-utils";
 
 type BookingStatus = Database["public"]["Enums"]["booking_status"];
 
@@ -47,20 +61,17 @@ interface Booking {
   property_type: string;
   service_address: string;
   preferred_date: string;
+  end_date: string | null;
+  booking_type: string | null;
+  selected_services: string[] | null;
   status: BookingStatus;
   staff_id: string | null;
   estimated_hours: number | null;
   estimated_cost: number | null;
+  actual_hours: number | null;
+  actual_cost: number | null;
   notes: string | null;
   created_at: string;
-}
-
-interface StaffMember {
-  id: string;
-  user_id: string;
-  full_name: string;
-  email: string;
-  is_active: boolean;
 }
 
 const AdminBookings = () => {
@@ -70,11 +81,13 @@ const AdminBookings = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchBookings();
-    fetchStaff();
+    loadStaff();
   }, []);
 
   const fetchBookings = async () => {
@@ -92,67 +105,9 @@ const AdminBookings = () => {
     setLoading(false);
   };
 
-  const fetchStaff = async () => {
-    try {
-      // First get all staff user IDs from user_roles
-      const { data: staffRoles, error: rolesError } = await supabase
-        .from("user_roles")
-        .select("user_id")
-        .eq("role", "staff");
-
-      if (rolesError) {
-        console.error("Error fetching staff roles:", rolesError);
-        return;
-      }
-
-      if (!staffRoles || staffRoles.length === 0) {
-        console.log("No staff roles found");
-        setStaff([]);
-        return;
-      }
-
-      const staffUserIds = staffRoles.map((r) => r.user_id);
-
-      // Get profiles for these staff members
-      const { data: profiles, error: profilesError } = await supabase
-        .from("profiles")
-        .select("id, full_name, phone")
-        .in("id", staffUserIds);
-
-      if (profilesError) {
-        console.error("Error fetching staff profiles:", profilesError);
-        return;
-      }
-
-      // Get staff details to check active status
-      const { data: staffDetails, error: detailsError } = await supabase
-        .from("staff_details")
-        .select("id, user_id, is_active")
-        .in("user_id", staffUserIds);
-
-      if (detailsError) {
-        console.error("Error fetching staff details:", detailsError);
-      }
-
-      // Combine the data - use user_id as the primary key for staff assignment
-      const combinedStaff: StaffMember[] = (profiles || []).map((profile) => {
-        const details = staffDetails?.find((d) => d.user_id === profile.id);
-        return {
-          id: details?.id || profile.id, // staff_details id if available
-          user_id: profile.id, // This is what goes in bookings.staff_id
-          full_name: profile.full_name || "Unnamed Staff",
-          email: profile.phone || "No contact", // Use phone as fallback since email isn't in profiles
-          is_active: details?.is_active ?? true,
-        };
-      });
-
-      // Filter to only active staff
-      const activeStaff = combinedStaff.filter((s) => s.is_active);
-      console.log("Fetched staff:", activeStaff);
-      setStaff(activeStaff);
-    } catch (error) {
-      console.error("Error in fetchStaff:", error);
-    }
+  const loadStaff = async () => {
+    const activeStaff = await fetchActiveStaff();
+    setStaff(activeStaff);
   };
 
   const updateBookingStatus = async (bookingId: string, newStatus: BookingStatus) => {
@@ -169,7 +124,6 @@ const AdminBookings = () => {
     } else {
       toast({ title: "Success", description: "Booking status updated" });
       fetchBookings();
-      // Update selected booking if open
       if (selectedBooking?.id === bookingId) {
         setSelectedBooking(prev => prev ? { ...prev, status: newStatus } : null);
       }
@@ -177,7 +131,6 @@ const AdminBookings = () => {
   };
 
   const assignStaff = async (bookingId: string, staffUserId: string) => {
-    // Get booking details first
     const booking = bookings.find(b => b.id === bookingId);
     if (!booking) return;
 
@@ -204,10 +157,9 @@ const AdminBookings = () => {
           : "Staff assigned successfully" 
       });
       
-      // Send work assignment email
       try {
         await emailService.sendWorkAssignment(booking.email, {
-          service_type: booking.service_type.replace(/_/g, " "),
+          service_type: formatServiceType(booking.service_type),
           property_type: booking.property_type,
           preferred_date: format(new Date(booking.preferred_date), "PPP"),
           service_address: booking.service_address,
@@ -239,19 +191,53 @@ const AdminBookings = () => {
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    const colors: Record<string, string> = {
-      pending: "bg-yellow-500",
-      confirmed: "bg-blue-500",
-      in_progress: "bg-purple-500",
-      completed: "bg-green-500",
-      cancelled: "bg-red-500",
-    };
-    return (
-      <Badge className={`${colors[status] || "bg-muted"} text-white`}>
-        {status.replace(/_/g, " ")}
-      </Badge>
-    );
+  const handleEditBooking = (booking: Booking) => {
+    setEditingBooking({ ...booking });
+    setEditDialogOpen(true);
+  };
+
+  const handleUpdateBooking = async () => {
+    if (!editingBooking) return;
+
+    const { error } = await supabase
+      .from("bookings")
+      .update({
+        first_name: editingBooking.first_name,
+        last_name: editingBooking.last_name,
+        email: editingBooking.email,
+        phone: editingBooking.phone,
+        service_address: editingBooking.service_address,
+        preferred_date: editingBooking.preferred_date,
+        estimated_hours: editingBooking.estimated_hours,
+        estimated_cost: editingBooking.estimated_cost,
+        actual_hours: editingBooking.actual_hours,
+        actual_cost: editingBooking.actual_cost,
+        notes: editingBooking.notes,
+      })
+      .eq("id", editingBooking.id);
+
+    if (error) {
+      toast({ variant: "destructive", title: "Error", description: "Failed to update booking" });
+    } else {
+      toast({ title: "Success", description: "Booking updated successfully" });
+      setEditDialogOpen(false);
+      setEditingBooking(null);
+      fetchBookings();
+    }
+  };
+
+  const handleDeleteBooking = async (bookingId: string) => {
+    const { error } = await supabase
+      .from("bookings")
+      .delete()
+      .eq("id", bookingId);
+
+    if (error) {
+      toast({ variant: "destructive", title: "Error", description: "Failed to delete booking" });
+    } else {
+      toast({ title: "Success", description: "Booking deleted successfully" });
+      fetchBookings();
+    }
   };
 
   const getStaffName = (staffId: string | null) => {
@@ -290,7 +276,7 @@ const AdminBookings = () => {
             <p className="text-muted-foreground">View and manage all customer bookings</p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => { fetchBookings(); fetchStaff(); }}>
+            <Button variant="outline" onClick={() => { fetchBookings(); loadStaff(); }}>
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
             </Button>
@@ -301,6 +287,50 @@ const AdminBookings = () => {
               </Link>
             </Button>
           </div>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid gap-4 md:grid-cols-5">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total Bookings</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">{bookings.length}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Pending</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-yellow-600">{bookings.filter(b => b.status === "pending").length}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Confirmed</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-blue-600">{bookings.filter(b => b.status === "confirmed").length}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">In Progress</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-purple-600">{bookings.filter(b => b.status === "in_progress").length}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Completed</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-green-600">{bookings.filter(b => b.status === "completed").length}</p>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Staff count indicator */}
@@ -348,6 +378,7 @@ const AdminBookings = () => {
                   <TableHead>Date</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Assigned To</TableHead>
+                  <TableHead>Cost</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -362,12 +393,28 @@ const AdminBookings = () => {
                     </TableCell>
                     <TableCell>
                       <div>
-                        <p>{booking.service_type.replace(/_/g, " ")}</p>
+                        <p>{formatServiceType(booking.service_type)}</p>
                         <p className="text-sm text-muted-foreground">{booking.property_type}</p>
                       </div>
                     </TableCell>
                     <TableCell>{format(new Date(booking.preferred_date), "PPP")}</TableCell>
-                    <TableCell>{getStatusBadge(booking.status)}</TableCell>
+                    <TableCell>
+                      <Select
+                        value={booking.status}
+                        onValueChange={(value) => updateBookingStatus(booking.id, value as BookingStatus)}
+                      >
+                        <SelectTrigger className="w-32">
+                          <StatusBadge status={booking.status} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="confirmed">Confirmed</SelectItem>
+                          <SelectItem value="in_progress">In Progress</SelectItem>
+                          <SelectItem value="completed">Completed</SelectItem>
+                          <SelectItem value="cancelled">Cancelled</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
                     <TableCell>
                       {booking.staff_id ? (
                         <div className="flex flex-col gap-1">
@@ -382,11 +429,38 @@ const AdminBookings = () => {
                           </Button>
                         </div>
                       ) : (
-                        <span className="text-muted-foreground">Unassigned</span>
+                        <Select 
+                          value="" 
+                          onValueChange={(staffId) => assignStaff(booking.id, staffId)}
+                        >
+                          <SelectTrigger className="w-36">
+                            <UserPlus className="h-4 w-4 mr-1" />
+                            <span>Assign</span>
+                          </SelectTrigger>
+                          <SelectContent>
+                            {staff.length === 0 ? (
+                              <div className="p-2 text-sm text-muted-foreground">No staff available</div>
+                            ) : (
+                              staff.map((s) => (
+                                <SelectItem key={s.user_id} value={s.user_id}>
+                                  {s.full_name}
+                                </SelectItem>
+                              ))
+                            )}
+                          </SelectContent>
+                        </Select>
                       )}
                     </TableCell>
                     <TableCell>
-                      <div className="flex gap-2 flex-wrap">
+                      <div className="text-sm">
+                        <p>${booking.estimated_cost?.toFixed(2) || "0.00"}</p>
+                        {booking.actual_cost && (
+                          <p className="text-green-600">${booking.actual_cost.toFixed(2)} actual</p>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
                         <Dialog>
                           <DialogTrigger asChild>
                             <Button
@@ -397,7 +471,7 @@ const AdminBookings = () => {
                               <Eye className="h-4 w-4" />
                             </Button>
                           </DialogTrigger>
-                          <DialogContent className="max-w-2xl">
+                          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                             <DialogHeader>
                               <DialogTitle>Booking Details</DialogTitle>
                             </DialogHeader>
@@ -417,7 +491,7 @@ const AdminBookings = () => {
                                   </div>
                                   <div>
                                     <p className="text-sm text-muted-foreground">Service</p>
-                                    <p>{selectedBooking.service_type.replace(/_/g, " ")}</p>
+                                    <p>{formatServiceType(selectedBooking.service_type)}</p>
                                   </div>
                                   <div>
                                     <p className="text-sm text-muted-foreground">Property</p>
@@ -436,94 +510,78 @@ const AdminBookings = () => {
                                   </div>
                                   <div>
                                     <p className="text-sm text-muted-foreground">Status</p>
-                                    {getStatusBadge(selectedBooking.status)}
+                                    <StatusBadge status={selectedBooking.status} />
                                   </div>
                                   <div>
                                     <p className="text-sm text-muted-foreground">Assigned Staff</p>
                                     <p>{getStaffName(selectedBooking.staff_id) || "Unassigned"}</p>
                                   </div>
+                                  <div>
+                                    <p className="text-sm text-muted-foreground">Booking Type</p>
+                                    <p className="capitalize">{selectedBooking.booking_type || "One-time"}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-sm text-muted-foreground">Estimated</p>
+                                    <p>{selectedBooking.estimated_hours || 0}h / ${selectedBooking.estimated_cost?.toFixed(2) || "0.00"}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-sm text-muted-foreground">Actual</p>
+                                    <p>{selectedBooking.actual_hours || 0}h / ${selectedBooking.actual_cost?.toFixed(2) || "0.00"}</p>
+                                  </div>
                                 </div>
+                                {selectedBooking.selected_services && selectedBooking.selected_services.length > 0 && (
+                                  <div>
+                                    <p className="text-sm text-muted-foreground">Selected Services</p>
+                                    <div className="flex flex-wrap gap-2 mt-1">
+                                      {selectedBooking.selected_services.map((service, idx) => (
+                                        <span key={idx} className="px-2 py-1 bg-muted rounded text-sm">{service}</span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
                                 {selectedBooking.notes && (
                                   <div>
                                     <p className="text-sm text-muted-foreground">Notes</p>
                                     <p>{selectedBooking.notes}</p>
                                   </div>
                                 )}
-                                <div className="flex flex-wrap gap-2 pt-4 border-t">
-                                  <div className="flex flex-col gap-1">
-                                    <label className="text-sm text-muted-foreground">Update Status</label>
-                                    <Select
-                                      value={selectedBooking.status}
-                                      onValueChange={(value) =>
-                                        updateBookingStatus(selectedBooking.id, value as BookingStatus)
-                                      }
-                                    >
-                                      <SelectTrigger className="w-40">
-                                        <SelectValue />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="pending">Pending</SelectItem>
-                                        <SelectItem value="confirmed">Confirmed</SelectItem>
-                                        <SelectItem value="in_progress">In Progress</SelectItem>
-                                        <SelectItem value="completed">Completed</SelectItem>
-                                        <SelectItem value="cancelled">Cancelled</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-                                  <div className="flex flex-col gap-1">
-                                    <label className="text-sm text-muted-foreground">
-                                      {selectedBooking.staff_id ? "Reassign Staff" : "Assign Staff"}
-                                    </label>
-                                    <Select 
-                                      value={selectedBooking.staff_id || ""}
-                                      onValueChange={(staffId) => assignStaff(selectedBooking.id, staffId)}
-                                    >
-                                      <SelectTrigger className="w-48">
-                                        <SelectValue placeholder="Select staff..." />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        {staff.length === 0 ? (
-                                          <div className="p-2 text-sm text-muted-foreground">No staff available</div>
-                                        ) : (
-                                          staff.map((s) => (
-                                            <SelectItem key={s.user_id} value={s.user_id}>
-                                              {s.full_name}
-                                            </SelectItem>
-                                          ))
-                                        )}
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
+                                <div className="flex gap-2 pt-4 border-t">
+                                  <Button variant="outline" onClick={() => handleEditBooking(selectedBooking)}>
+                                    <Pencil className="h-4 w-4 mr-2" />
+                                    Edit Booking
+                                  </Button>
                                 </div>
                               </div>
                             )}
                           </DialogContent>
                         </Dialog>
-                        {/* Always show staff assignment dropdown */}
-                        {booking.status !== "completed" && booking.status !== "cancelled" && (
-                          <Select 
-                            value={booking.staff_id || ""} 
-                            onValueChange={(staffId) => assignStaff(booking.id, staffId)}
-                          >
-                            <SelectTrigger className="w-36">
-                              <UserPlus className="h-4 w-4 mr-1" />
-                              <span className="truncate">
-                                {booking.staff_id ? "Reassign" : "Assign"}
-                              </span>
-                            </SelectTrigger>
-                            <SelectContent>
-                              {staff.length === 0 ? (
-                                <div className="p-2 text-sm text-muted-foreground">No staff available</div>
-                              ) : (
-                                staff.map((s) => (
-                                  <SelectItem key={s.user_id} value={s.user_id}>
-                                    {s.full_name}
-                                  </SelectItem>
-                                ))
-                              )}
-                            </SelectContent>
-                          </Select>
-                        )}
+                        <Button variant="ghost" size="sm" onClick={() => handleEditBooking(booking)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Booking?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This will permanently delete the booking for {booking.first_name} {booking.last_name}. This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction 
+                                onClick={() => handleDeleteBooking(booking.id)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -536,6 +594,126 @@ const AdminBookings = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Edit Booking Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Booking</DialogTitle>
+          </DialogHeader>
+          {editingBooking && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-first-name">First Name</Label>
+                  <Input
+                    id="edit-first-name"
+                    value={editingBooking.first_name}
+                    onChange={(e) => setEditingBooking({ ...editingBooking, first_name: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-last-name">Last Name</Label>
+                  <Input
+                    id="edit-last-name"
+                    value={editingBooking.last_name}
+                    onChange={(e) => setEditingBooking({ ...editingBooking, last_name: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-email">Email</Label>
+                  <Input
+                    id="edit-email"
+                    type="email"
+                    value={editingBooking.email}
+                    onChange={(e) => setEditingBooking({ ...editingBooking, email: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-phone">Phone</Label>
+                  <Input
+                    id="edit-phone"
+                    value={editingBooking.phone}
+                    onChange={(e) => setEditingBooking({ ...editingBooking, phone: e.target.value })}
+                  />
+                </div>
+                <div className="col-span-2 space-y-2">
+                  <Label htmlFor="edit-address">Service Address</Label>
+                  <Input
+                    id="edit-address"
+                    value={editingBooking.service_address}
+                    onChange={(e) => setEditingBooking({ ...editingBooking, service_address: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-date">Preferred Date</Label>
+                  <Input
+                    id="edit-date"
+                    type="date"
+                    value={editingBooking.preferred_date}
+                    onChange={(e) => setEditingBooking({ ...editingBooking, preferred_date: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-est-hours">Estimated Hours</Label>
+                  <Input
+                    id="edit-est-hours"
+                    type="number"
+                    step="0.5"
+                    value={editingBooking.estimated_hours || ""}
+                    onChange={(e) => setEditingBooking({ ...editingBooking, estimated_hours: parseFloat(e.target.value) || null })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-est-cost">Estimated Cost ($)</Label>
+                  <Input
+                    id="edit-est-cost"
+                    type="number"
+                    step="0.01"
+                    value={editingBooking.estimated_cost || ""}
+                    onChange={(e) => setEditingBooking({ ...editingBooking, estimated_cost: parseFloat(e.target.value) || null })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-act-hours">Actual Hours</Label>
+                  <Input
+                    id="edit-act-hours"
+                    type="number"
+                    step="0.5"
+                    value={editingBooking.actual_hours || ""}
+                    onChange={(e) => setEditingBooking({ ...editingBooking, actual_hours: parseFloat(e.target.value) || null })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-act-cost">Actual Cost ($)</Label>
+                  <Input
+                    id="edit-act-cost"
+                    type="number"
+                    step="0.01"
+                    value={editingBooking.actual_cost || ""}
+                    onChange={(e) => setEditingBooking({ ...editingBooking, actual_cost: parseFloat(e.target.value) || null })}
+                  />
+                </div>
+                <div className="col-span-2 space-y-2">
+                  <Label htmlFor="edit-notes">Notes</Label>
+                  <Textarea
+                    id="edit-notes"
+                    value={editingBooking.notes || ""}
+                    onChange={(e) => setEditingBooking({ ...editingBooking, notes: e.target.value })}
+                    rows={3}
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 pt-4">
+                <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleUpdateBooking}>Save Changes</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
       </RequirePermission>
     </AdminLayout>
   );

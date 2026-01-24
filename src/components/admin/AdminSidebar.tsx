@@ -50,7 +50,6 @@ export const AdminSidebar = () => {
         children: [
           { title: "All Bookings", path: "/admin/bookings" },
           { title: "Create Booking", path: "/admin/bookings/create" },
-          { title: "Assign Staff", path: "/admin/bookings/assign" },
         ],
       });
     }
@@ -72,7 +71,7 @@ export const AdminSidebar = () => {
     if (hasPermission("can_manage_staff") || isSuperAdmin()) {
       const staffChildren = [
         { title: "Staff Database", path: "/admin/staff" },
-        { title: "Create Staff", path: "/admin/users/create-staff" },
+        { title: "Create Staff", path: "/admin/staff/create" },
       ];
 
       // Payroll requires can_manage_payments
@@ -99,7 +98,7 @@ export const AdminSidebar = () => {
         requiredPermission: "can_manage_admins",
         children: [
           { title: "Admin Users", path: "/admin/managers" },
-          { title: "Create Admin", path: "/admin/users/create-admin" },
+          { title: "Create Admin", path: "/admin/managers/create" },
         ],
       });
     }
