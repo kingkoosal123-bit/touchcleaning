@@ -8,6 +8,7 @@ import Footer from "@/components/Footer";
 import { SEOHead } from "@/components/SEOHead";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
+import { sanitizeHTML } from "@/lib/sanitize";
 
 interface BlogPost {
   id: string;
@@ -170,7 +171,7 @@ const BlogPostPage = () => {
           <div className="max-w-none">
             {post.content ? (
               <div 
-                dangerouslySetInnerHTML={{ __html: post.content }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHTML(post.content) }}
                 className="blog-content"
               />
             ) : (
