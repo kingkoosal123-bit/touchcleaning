@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { sanitizeHTML } from "@/lib/sanitize";
 
 interface RichTextEditorProps {
   value: string;
@@ -328,7 +329,7 @@ export const RichTextEditor = ({ value, onChange, placeholder }: RichTextEditorP
           <div className="min-h-[400px] p-6 bg-background overflow-auto">
             {value ? (
               <div 
-                dangerouslySetInnerHTML={{ __html: value }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHTML(value) }}
                 className="blog-content"
               />
             ) : (
