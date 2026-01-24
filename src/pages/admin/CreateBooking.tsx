@@ -378,19 +378,24 @@ const CreateBooking = () => {
                   <div 
                     key={service.id} 
                     className={cn(
-                      "flex items-start space-x-3 p-4 border rounded-lg cursor-pointer transition-all",
+                      "flex items-start space-x-3 p-4 border rounded-lg transition-all",
                       selectedServices.includes(service.id) 
                         ? "border-primary bg-primary/5" 
                         : "border-border hover:border-primary/50"
                     )}
-                    onClick={() => handleServiceToggle(service.id)}
                   >
                     <Checkbox 
                       id={`admin-service-${service.id}`}
                       checked={selectedServices.includes(service.id)}
-                      onCheckedChange={() => handleServiceToggle(service.id)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedServices(prev => [...prev, service.id]);
+                        } else {
+                          setSelectedServices(prev => prev.filter(s => s !== service.id));
+                        }
+                      }}
                     />
-                    <Label htmlFor={`admin-service-${service.id}`} className="cursor-pointer text-sm leading-tight">
+                    <Label htmlFor={`admin-service-${service.id}`} className="cursor-pointer text-sm leading-tight flex-1">
                       {service.label}
                     </Label>
                   </div>
