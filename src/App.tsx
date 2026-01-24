@@ -38,6 +38,12 @@ import AdminCMSGallery from "./pages/admin/cms/AdminCMSGallery";
 import AdminCMSBlog from "./pages/admin/cms/AdminCMSBlog";
 import AdminCMSEnquiries from "./pages/admin/cms/AdminCMSEnquiries";
 import AdminCMSSettings from "./pages/admin/cms/AdminCMSSettings";
+// Email Management
+import AdminEmailDashboard from "./pages/admin/email/AdminEmailDashboard";
+import AdminEmailTemplates from "./pages/admin/email/AdminEmailTemplates";
+import AdminEmailLogs from "./pages/admin/email/AdminEmailLogs";
+import AdminEmailCampaigns from "./pages/admin/email/AdminEmailCampaigns";
+import CreateEmailCampaign from "./pages/admin/email/CreateEmailCampaign";
 // Staff Pages
 import StaffJobsPage from "./pages/staff/StaffJobsPage";
 import StaffCompletedPage from "./pages/staff/StaffCompletedPage";
@@ -95,6 +101,12 @@ const App = () => (
             <Route path="/admin/cms/blog" element={<AdminCMSBlog />} />
             <Route path="/admin/cms/enquiries" element={<AdminCMSEnquiries />} />
             <Route path="/admin/cms/settings" element={<AdminCMSSettings />} />
+            {/* Email Management Routes */}
+            <Route path="/admin/email" element={<AdminEmailDashboard />} />
+            <Route path="/admin/email/templates" element={<AdminEmailTemplates />} />
+            <Route path="/admin/email/logs" element={<AdminEmailLogs />} />
+            <Route path="/admin/email/campaigns" element={<AdminEmailCampaigns />} />
+            <Route path="/admin/email/campaigns/create" element={<CreateEmailCampaign />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

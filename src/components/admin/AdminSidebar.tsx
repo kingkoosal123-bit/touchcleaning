@@ -14,6 +14,7 @@ import {
   LogOut,
   Building2,
   Palette,
+  Mail,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -116,6 +117,19 @@ export const AdminSidebar = () => {
           { title: "Gallery", path: "/admin/cms/gallery" },
           { title: "Blog Posts", path: "/admin/cms/blog" },
           { title: "Site Settings", path: "/admin/cms/settings" },
+        ],
+      });
+
+      // Email Management
+      items.push({
+        title: "Email Management",
+        icon: Mail,
+        requiredPermission: "can_edit_settings",
+        children: [
+          { title: "Dashboard", path: "/admin/email" },
+          { title: "Templates", path: "/admin/email/templates" },
+          { title: "Email Logs", path: "/admin/email/logs" },
+          { title: "Bulk Campaigns", path: "/admin/email/campaigns" },
         ],
       });
     }
