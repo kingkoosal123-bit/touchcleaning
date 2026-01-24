@@ -18,6 +18,7 @@ const Auth = () => {
   const navigate = useNavigate();
 
   // Redirect based on role if already logged in
+  // This is the CUSTOMER auth page - admins/staff should use /auth/admin
   useEffect(() => {
     const checkUserRole = async () => {
       if (user) {
@@ -27,12 +28,14 @@ const Auth = () => {
           .eq("user_id", user.id)
           .maybeSingle();
         
+        // Strict role enforcement: redirect each role to their proper portal
         if (roleData?.role === "admin") {
-          navigate("/admin");
+          navigate("/admin", { replace: true });
         } else if (roleData?.role === "staff") {
-          navigate("/staff");
+          navigate("/staff", { replace: true });
         } else {
-          navigate("/dashboard");
+          // Only customers stay on this flow - redirect to dashboard
+          navigate("/dashboard", { replace: true });
         }
       }
     };
