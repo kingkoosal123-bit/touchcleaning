@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { StaffProtectedRoute } from "@/components/staff/StaffProtectedRoute";
+import AnalyticsProvider from "@/components/AnalyticsProvider";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import Services from "./pages/Services";
@@ -30,6 +31,7 @@ import CreateBooking from "./pages/admin/CreateBooking";
 import AdminPayroll from "./pages/admin/AdminPayroll";
 import AdminBookingPayroll from "./pages/admin/AdminBookingPayroll";
 import AdminSEO from "./pages/admin/AdminSEO";
+import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import CustomerDashboard from "./pages/customer/CustomerDashboard";
 import AdminCMSServices from "./pages/admin/cms/AdminCMSServices";
 import AdminCMSTeam from "./pages/admin/cms/AdminCMSTeam";
@@ -50,7 +52,6 @@ import StaffCompletedPage from "./pages/staff/StaffCompletedPage";
 import StaffSchedulePage from "./pages/staff/StaffSchedulePage";
 import StaffEarningsPage from "./pages/staff/StaffEarningsPage";
 import StaffProfilePage from "./pages/staff/StaffProfilePage";
-
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -60,55 +61,58 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/services" element={<Services />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/gallery" element={<Gallery />} />
-            <Route path="/blog" element={<Blog />} />
-            <Route path="/blog/:slug" element={<BlogPostPage />} />
-            <Route path="/locations" element={<Locations />} />
-            <Route path="/team" element={<Team />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/auth/admin" element={<AdminAuth />} />
-            <Route path="/book" element={<ProtectedRoute><BookNow /></ProtectedRoute>} />
-            <Route path="/dashboard" element={<ProtectedRoute><CustomerDashboard /></ProtectedRoute>} />
-            
-            {/* Staff Portal Routes */}
-            <Route path="/staff" element={<StaffProtectedRoute><StaffJobsPage /></StaffProtectedRoute>} />
-            <Route path="/staff/completed" element={<StaffProtectedRoute><StaffCompletedPage /></StaffProtectedRoute>} />
-            <Route path="/staff/schedule" element={<StaffProtectedRoute><StaffSchedulePage /></StaffProtectedRoute>} />
-            <Route path="/staff/earnings" element={<StaffProtectedRoute><StaffEarningsPage /></StaffProtectedRoute>} />
-            <Route path="/staff/profile" element={<StaffProtectedRoute><StaffProfilePage /></StaffProtectedRoute>} />
-            
-            {/* Admin Routes */}
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/bookings" element={<AdminBookings />} />
-            <Route path="/admin/bookings/create" element={<CreateBooking />} />
-            <Route path="/admin/customers" element={<AdminCustomers />} />
-            <Route path="/admin/managers" element={<AdminManagers />} />
-            <Route path="/admin/managers/create" element={<CreateAdmin />} />
-            <Route path="/admin/staff" element={<AdminStaff />} />
-            <Route path="/admin/staff/create" element={<CreateStaff />} />
-            <Route path="/admin/payroll" element={<AdminPayroll />} />
-            <Route path="/admin/booking-payroll" element={<AdminBookingPayroll />} />
-            <Route path="/admin/seo" element={<AdminSEO />} />
-            <Route path="/admin/cms/services" element={<AdminCMSServices />} />
-            <Route path="/admin/cms/team" element={<AdminCMSTeam />} />
-            <Route path="/admin/cms/locations" element={<AdminCMSLocations />} />
-            <Route path="/admin/cms/gallery" element={<AdminCMSGallery />} />
-            <Route path="/admin/cms/blog" element={<AdminCMSBlog />} />
-            <Route path="/admin/cms/enquiries" element={<AdminCMSEnquiries />} />
-            <Route path="/admin/cms/settings" element={<AdminCMSSettings />} />
-            {/* Email Management Routes */}
-            <Route path="/admin/email" element={<AdminEmailDashboard />} />
-            <Route path="/admin/email/templates" element={<AdminEmailTemplates />} />
-            <Route path="/admin/email/logs" element={<AdminEmailLogs />} />
-            <Route path="/admin/email/campaigns" element={<AdminEmailCampaigns />} />
-            <Route path="/admin/email/campaigns/create" element={<CreateEmailCampaign />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <AnalyticsProvider>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/services" element={<Services />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/gallery" element={<Gallery />} />
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/blog/:slug" element={<BlogPostPage />} />
+              <Route path="/locations" element={<Locations />} />
+              <Route path="/team" element={<Team />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/auth/admin" element={<AdminAuth />} />
+              <Route path="/book" element={<ProtectedRoute><BookNow /></ProtectedRoute>} />
+              <Route path="/dashboard" element={<ProtectedRoute><CustomerDashboard /></ProtectedRoute>} />
+              
+              {/* Staff Portal Routes */}
+              <Route path="/staff" element={<StaffProtectedRoute><StaffJobsPage /></StaffProtectedRoute>} />
+              <Route path="/staff/completed" element={<StaffProtectedRoute><StaffCompletedPage /></StaffProtectedRoute>} />
+              <Route path="/staff/schedule" element={<StaffProtectedRoute><StaffSchedulePage /></StaffProtectedRoute>} />
+              <Route path="/staff/earnings" element={<StaffProtectedRoute><StaffEarningsPage /></StaffProtectedRoute>} />
+              <Route path="/staff/profile" element={<StaffProtectedRoute><StaffProfilePage /></StaffProtectedRoute>} />
+              
+              {/* Admin Routes */}
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/bookings" element={<AdminBookings />} />
+              <Route path="/admin/bookings/create" element={<CreateBooking />} />
+              <Route path="/admin/customers" element={<AdminCustomers />} />
+              <Route path="/admin/managers" element={<AdminManagers />} />
+              <Route path="/admin/managers/create" element={<CreateAdmin />} />
+              <Route path="/admin/staff" element={<AdminStaff />} />
+              <Route path="/admin/staff/create" element={<CreateStaff />} />
+              <Route path="/admin/payroll" element={<AdminPayroll />} />
+              <Route path="/admin/booking-payroll" element={<AdminBookingPayroll />} />
+              <Route path="/admin/seo" element={<AdminSEO />} />
+              <Route path="/admin/analytics" element={<AdminAnalytics />} />
+              <Route path="/admin/cms/services" element={<AdminCMSServices />} />
+              <Route path="/admin/cms/team" element={<AdminCMSTeam />} />
+              <Route path="/admin/cms/locations" element={<AdminCMSLocations />} />
+              <Route path="/admin/cms/gallery" element={<AdminCMSGallery />} />
+              <Route path="/admin/cms/blog" element={<AdminCMSBlog />} />
+              <Route path="/admin/cms/enquiries" element={<AdminCMSEnquiries />} />
+              <Route path="/admin/cms/settings" element={<AdminCMSSettings />} />
+              {/* Email Management Routes */}
+              <Route path="/admin/email" element={<AdminEmailDashboard />} />
+              <Route path="/admin/email/templates" element={<AdminEmailTemplates />} />
+              <Route path="/admin/email/logs" element={<AdminEmailLogs />} />
+              <Route path="/admin/email/campaigns" element={<AdminEmailCampaigns />} />
+              <Route path="/admin/email/campaigns/create" element={<CreateEmailCampaign />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AnalyticsProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
