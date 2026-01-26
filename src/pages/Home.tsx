@@ -107,9 +107,12 @@ const Home = () => {
       <InteractiveHero />
 
       {/* Services Section */}
-      <section className="py-20 px-4 bg-muted/30">
+      <section className="py-24 px-4 bg-gradient-to-b from-background to-muted/30">
         <div className="container mx-auto">
-          <div className="text-center mb-12">
+          <div className="text-center mb-16">
+            <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
+              What We Offer
+            </span>
             <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
               Our Services
             </h2>
@@ -130,35 +133,43 @@ const Home = () => {
                 </Card>
               ))
             ) : (
-              displayServices.map((service) => {
+              displayServices.map((service, index) => {
                 const IconComponent = iconMap[service.icon || "Sparkles"] || Sparkles;
                 return (
-                  <Card key={service.id} className="border-border hover:shadow-lg transition-shadow">
-                    <CardContent className="pt-8">
+                  <Card 
+                    key={service.id} 
+                    className="group border-border/50 bg-card hover:border-primary/30 hover:shadow-xl transition-all duration-300 overflow-hidden"
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
+                    <CardContent className="pt-8 relative">
+                      {/* Decorative gradient */}
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-primary/5 to-transparent rounded-bl-full" />
+                      
                       {service.image_url ? (
-                        <div className="w-full h-40 rounded-lg mb-6 overflow-hidden">
+                        <div className="w-full h-44 rounded-xl mb-6 overflow-hidden">
                           <img 
                             src={service.image_url} 
                             alt={service.title}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           />
                         </div>
                       ) : (
-                        <div className="bg-primary/10 w-16 h-16 rounded-lg flex items-center justify-center mb-6">
+                        <div className="bg-gradient-to-br from-primary/10 to-secondary/10 w-16 h-16 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                           <IconComponent className="w-8 h-8 text-primary" />
                         </div>
                       )}
-                      <h3 className="text-2xl font-semibold text-foreground mb-4">
+                      <h3 className="text-2xl font-semibold text-foreground mb-3 group-hover:text-primary transition-colors">
                         {service.title}
                       </h3>
-                      <p className="text-muted-foreground mb-6">
+                      <p className="text-muted-foreground mb-6 line-clamp-3">
                         {service.short_description || service.description}
                       </p>
                       <Link
                         to={`/services`}
-                        className="text-primary font-medium inline-flex items-center hover:gap-2 transition-all"
+                        className="inline-flex items-center gap-2 text-primary font-medium group/link"
                       >
-                        Learn More <ArrowRight className="ml-1 w-4 h-4" />
+                        Learn More 
+                        <ArrowRight className="w-4 h-4 group-hover/link:translate-x-1 transition-transform" />
                       </Link>
                     </CardContent>
                   </Card>
@@ -167,10 +178,11 @@ const Home = () => {
             )}
           </div>
 
-          <div className="text-center mt-12">
-            <Button asChild size="lg" variant="outline">
+          <div className="text-center mt-14">
+            <Button asChild size="lg" variant="outline" className="group border-primary/30 hover:border-primary hover:bg-primary/5">
               <Link to="/services">
-                See All Services <ArrowRight className="ml-2 w-4 h-4" />
+                See All Services 
+                <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Link>
             </Button>
           </div>
@@ -178,66 +190,85 @@ const Home = () => {
       </section>
 
       {/* Why Choose Us */}
-      <section className="py-20 px-4">
-        <div className="container mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
+      <section className="py-24 px-4 relative overflow-hidden">
+        {/* Background decorations */}
+        <div className="absolute top-0 left-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-secondary/5 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
+        
+        <div className="container mx-auto relative">
+          <div className="grid lg:grid-cols-2 gap-16 items-center max-w-6xl mx-auto">
             <div>
+              <span className="inline-block px-4 py-1.5 rounded-full bg-secondary/10 text-secondary text-sm font-medium mb-4">
+                Why Us
+              </span>
               <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
                 Why Choose Touch Cleaning?
               </h2>
-              <p className="text-xl text-muted-foreground mb-8">
+              <p className="text-xl text-muted-foreground mb-10">
                 With over 500 satisfied clients including multinational companies and government projects, we deliver excellence in every clean.
               </p>
-              <div className="space-y-4">
+              <div className="grid sm:grid-cols-2 gap-4">
                 {whyChooseUs.map((item, index) => (
-                  <div key={index} className="flex items-start space-x-3">
-                    <CheckCircle className="w-6 h-6 text-primary flex-shrink-0 mt-0.5" />
-                    <span className="text-foreground">{item}</span>
+                  <div 
+                    key={index} 
+                    className="flex items-start gap-3 p-4 rounded-xl bg-card border border-border/50 hover:border-primary/30 hover:shadow-md transition-all duration-300"
+                  >
+                    <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
+                      <CheckCircle className="w-4 h-4 text-primary-foreground" />
+                    </div>
+                    <span className="text-foreground text-sm font-medium">{item}</span>
                   </div>
                 ))}
               </div>
-              <Button asChild size="lg" className="mt-8">
-                <Link to="/about">Learn More About Us</Link>
+              <Button asChild size="lg" className="mt-10 group">
+                <Link to="/about">
+                  Learn More About Us
+                  <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </Link>
               </Button>
             </div>
             <div className="relative">
-              <div className="rounded-2xl overflow-hidden shadow-xl">
+              {/* Image with decorative frame */}
+              <div className="absolute -inset-4 bg-gradient-to-br from-primary/20 via-transparent to-secondary/20 rounded-3xl blur-xl" />
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-border/50">
                 <img 
                   src={teamImage} 
                   alt="Professional cleaning team" 
                   className="w-full h-auto object-cover"
                 />
               </div>
-              <Card className="absolute -bottom-6 -left-6 border-border p-6 bg-background/95 backdrop-blur">
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-4">
-                    <div className="bg-primary/10 p-4 rounded-lg">
-                      <Award className="w-8 h-8 text-primary" />
+              
+              {/* Floating trust badges */}
+              <Card className="absolute -bottom-6 -left-6 border-border/50 bg-card/95 backdrop-blur-sm shadow-xl max-w-xs">
+                <CardContent className="p-5 space-y-4">
+                  <div className="flex items-center gap-4">
+                    <div className="bg-gradient-to-br from-primary to-primary/70 p-3 rounded-xl">
+                      <Award className="w-6 h-6 text-primary-foreground" />
                     </div>
                     <div>
                       <h3 className="font-semibold text-foreground">Quality Certified</h3>
-                      <p className="text-sm text-muted-foreground">ISO certified services</p>
+                      <p className="text-xs text-muted-foreground">ISO certified services</p>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-4">
-                    <div className="bg-primary/10 p-4 rounded-lg">
-                      <Shield className="w-8 h-8 text-primary" />
+                  <div className="flex items-center gap-4">
+                    <div className="bg-gradient-to-br from-secondary to-secondary/70 p-3 rounded-xl">
+                      <Shield className="w-6 h-6 text-secondary-foreground" />
                     </div>
                     <div>
                       <h3 className="font-semibold text-foreground">Fully Insured</h3>
-                      <p className="text-sm text-muted-foreground">Complete coverage for peace of mind</p>
+                      <p className="text-xs text-muted-foreground">Complete peace of mind</p>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-4">
-                    <div className="bg-primary/10 p-4 rounded-lg">
-                      <Users className="w-8 h-8 text-primary" />
+                  <div className="flex items-center gap-4">
+                    <div className="bg-gradient-to-br from-primary to-secondary p-3 rounded-xl">
+                      <Users className="w-6 h-6 text-primary-foreground" />
                     </div>
                     <div>
                       <h3 className="font-semibold text-foreground">Expert Team</h3>
-                      <p className="text-sm text-muted-foreground">Trained and vetted professionals</p>
+                      <p className="text-xs text-muted-foreground">Trained professionals</p>
                     </div>
                   </div>
-                </div>
+                </CardContent>
               </Card>
             </div>
           </div>
@@ -245,21 +276,40 @@ const Home = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 bg-primary text-primary-foreground">
-        <div className="container mx-auto text-center">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">
+      <section className="py-24 px-4 relative overflow-hidden">
+        {/* Gradient background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-primary/90" />
+        
+        {/* Decorative elements */}
+        <div className="absolute top-0 left-0 w-full h-full">
+          <div className="absolute top-10 left-10 w-32 h-32 bg-white/5 rounded-full blur-2xl" />
+          <div className="absolute bottom-10 right-10 w-48 h-48 bg-secondary/20 rounded-full blur-3xl" />
+          <div className="absolute top-1/2 left-1/4 w-24 h-24 bg-white/5 rounded-full blur-xl" />
+        </div>
+        
+        <div className="container mx-auto text-center relative z-10">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-white/10 text-primary-foreground text-sm font-medium mb-6 backdrop-blur-sm">
+            Get Started Today
+          </span>
+          <h2 className="text-4xl md:text-5xl font-bold text-primary-foreground mb-6">
             Ready to Experience the Difference?
           </h2>
-          <p className="text-xl mb-8 opacity-90 max-w-2xl mx-auto">
+          <p className="text-xl text-primary-foreground/90 mb-10 max-w-2xl mx-auto">
             Book your cleaning service today and enjoy a spotless, fresh space
           </p>
-          <Button asChild size="lg" variant="secondary" className="text-lg px-8 py-6">
-            <Link to="/book">Book Your Service Now</Link>
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button asChild size="lg" variant="secondary" className="text-lg px-8 py-6 group shadow-lg hover:shadow-xl transition-shadow">
+              <Link to="/book">
+                Book Your Service Now
+                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </Button>
+            <Button asChild size="lg" variant="outline" className="text-lg px-8 py-6 bg-transparent border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10">
+              <Link to="/contact">Contact Us</Link>
+            </Button>
+          </div>
         </div>
       </section>
-
-      <Footer />
     </div>
   );
 };
