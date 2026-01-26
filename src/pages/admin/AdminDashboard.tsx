@@ -1,24 +1,23 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { StatusBadge } from "@/components/admin/StatusBadge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import {
   Calendar,
   Users,
   DollarSign,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
   TrendingUp,
   UserCog,
   CalendarDays,
   ArrowRight,
   RefreshCw,
+  ClipboardList,
 } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from "date-fns";
+import { statusColors, formatServiceType } from "@/lib/admin-utils";
 
 interface Analytics {
   pending_count: number;
@@ -93,16 +92,7 @@ const AdminDashboard = () => {
     setLoading(false);
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "pending": return "bg-yellow-500";
-      case "confirmed": return "bg-blue-500";
-      case "in_progress": return "bg-purple-500";
-      case "completed": return "bg-green-500";
-      case "cancelled": return "bg-red-500";
-      default: return "bg-muted";
-    }
-  };
+  const getStatusColor = (status: string) => statusColors[status] || "bg-muted";
 
   const monthDays = eachDayOfInterval({
     start: startOfMonth(currentMonth),
@@ -272,15 +262,10 @@ const AdminDashboard = () => {
                         {booking.first_name} {booking.last_name}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {booking.service_type.replace(/_/g, " ")}
+                        {formatServiceType(booking.service_type)}
                       </p>
                     </div>
-                    <Badge
-                      variant="secondary"
-                      className={`${getStatusColor(booking.status)} text-white text-xs`}
-                    >
-                      {booking.status}
-                    </Badge>
+                    <StatusBadge status={booking.status} className="text-xs" />
                   </div>
                 ))
               )}
@@ -336,7 +321,7 @@ const AdminDashboard = () => {
                           key={b.id}
                           className={`text-xs px-1 py-0.5 rounded truncate ${getStatusColor(b.status)} text-white`}
                         >
-                          {b.service_type.replace(/_/g, " ").slice(0, 10)}
+                          {formatServiceType(b.service_type).slice(0, 10)}
                         </div>
                       ))}
                       {dayBookings.length > 2 && (
@@ -359,14 +344,14 @@ const AdminDashboard = () => {
             </Link>
           </Button>
           <Button asChild variant="outline" className="h-auto py-4">
-            <Link to="/admin/users/create-staff" className="flex flex-col items-center gap-2">
+            <Link to="/admin/staff/create" className="flex flex-col items-center gap-2">
               <UserCog className="h-6 w-6" />
               <span>Create Staff</span>
             </Link>
           </Button>
           <Button asChild variant="outline" className="h-auto py-4">
-            <Link to="/admin/assign" className="flex flex-col items-center gap-2">
-              <Clock className="h-6 w-6" />
+            <Link to="/admin/bookings" className="flex flex-col items-center gap-2">
+              <ClipboardList className="h-6 w-6" />
               <span>Assign Jobs</span>
             </Link>
           </Button>
