@@ -109,7 +109,7 @@ const Home = () => {
       {/* Services Section */}
       <section className="py-16 px-4 bg-gradient-to-b from-background to-muted/30">
         <div className="container mx-auto">
-          <div className="text-center mb-16">
+          <div className="text-center mb-10">
             <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
               What We Offer
             </span>
@@ -178,7 +178,7 @@ const Home = () => {
             )}
           </div>
 
-          <div className="text-center mt-14">
+          <div className="text-center mt-10">
             <Button asChild size="lg" variant="outline" className="group border-primary/30 hover:border-primary hover:bg-primary/5">
               <Link to="/services">
                 See All Services 
