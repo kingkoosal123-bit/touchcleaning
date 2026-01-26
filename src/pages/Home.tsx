@@ -107,12 +107,9 @@ const Home = () => {
       <InteractiveHero />
 
       {/* Services Section */}
-      <section className="py-16 px-4 bg-gradient-to-b from-background to-muted/30">
+      <section className="py-12 px-4 bg-gradient-to-b from-background to-muted/30">
         <div className="container mx-auto">
           <div className="text-center mb-10">
-            <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
-              What We Offer
-            </span>
             <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
               Our Services
             </h2>
@@ -190,7 +187,7 @@ const Home = () => {
       </section>
 
       {/* Why Choose Us */}
-      <section className="py-16 px-4 relative overflow-hidden">
+      <section className="py-12 px-4 relative overflow-hidden">
         {/* Background decorations */}
         <div className="absolute top-0 left-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-secondary/5 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
@@ -198,9 +195,6 @@ const Home = () => {
         <div className="container mx-auto relative">
           <div className="grid lg:grid-cols-2 gap-16 items-center max-w-6xl mx-auto">
             <div>
-              <span className="inline-block px-4 py-1.5 rounded-full bg-secondary/10 text-secondary text-sm font-medium mb-4">
-                Why Us
-              </span>
               <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
                 Why Choose Touch Cleaning?
               </h2>
@@ -276,7 +270,7 @@ const Home = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 px-4 relative overflow-hidden">
+      <section className="py-12 px-4 relative overflow-hidden">
         {/* Gradient background */}
         <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-primary/90" />
         
