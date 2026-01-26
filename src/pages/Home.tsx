@@ -7,9 +7,8 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { SEOHead } from "@/components/SEOHead";
 import { supabase } from "@/integrations/supabase/client";
-import heroImage from "@/assets/hero-cleaning.jpg";
 import teamImage from "@/assets/team-cleaning.jpg";
-
+import InteractiveHero from "@/components/home/InteractiveHero";
 // Icon mapping for services
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Sparkles,
@@ -56,13 +55,6 @@ const Home = () => {
 
     fetchServices();
   }, []);
-
-  const stats = [
-    { number: "500+", label: "Satisfied Clients" },
-    { number: "15+", label: "Years Experience" },
-    { number: "100%", label: "Satisfaction Rate" },
-    { number: "24/7", label: "Support Available" },
-  ];
 
   const whyChooseUs = [
     "Experienced and trained professionals",
@@ -111,50 +103,8 @@ const Home = () => {
       <SEOHead page="home" />
       <Navbar />
       
-      {/* Hero Section */}
-      <section className="relative pt-40 pb-20 px-4 overflow-hidden">
-        <div className="absolute inset-0">
-          <img 
-            src={heroImage} 
-            alt="Professional cleaning service" 
-            className="w-full h-full object-cover opacity-20"
-          />
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background/80 to-accent/20" />
-        </div>
-        <div className="container mx-auto relative z-10">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-foreground mb-6 leading-tight">
-              Clean Place,
-              <span className="text-primary block mt-2">Happier Face</span>
-            </h1>
-            <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Professional cleaning solutions for homes and businesses across Sydney, NSW
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Button asChild size="lg" className="text-lg px-8 py-6">
-                <Link to="/book">Book Now</Link>
-              </Button>
-              <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6">
-                <Link to="/services">Our Services</Link>
-              </Button>
-            </div>
-          </div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-16 max-w-5xl mx-auto">
-            {stats.map((stat, index) => (
-              <Card key={index} className="border-border bg-card/50 backdrop-blur">
-                <CardContent className="pt-6 text-center">
-                  <div className="text-3xl md:text-4xl font-bold text-primary mb-2">
-                    {stat.number}
-                  </div>
-                  <div className="text-sm text-muted-foreground">{stat.label}</div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* Interactive Hero Section */}
+      <InteractiveHero />
 
       {/* Services Section */}
       <section className="py-20 px-4 bg-muted/30">
