@@ -19,6 +19,7 @@ import { z } from "zod";
 import { format, addWeeks, addMonths } from "date-fns";
 import { emailService } from "@/lib/email";
 import { cn } from "@/lib/utils";
+import { fetchActiveStaff } from "@/lib/admin-utils";
 
 const adminBookingSchema = z.object({
   first_name: z.string().trim().min(1, "First name is required").max(50, "First name must be less than 50 characters"),
@@ -34,11 +35,10 @@ const adminBookingSchema = z.object({
 interface Customer {
   id: string;
   full_name: string;
-  email?: string;
-  phone?: string;
+  phone: string;
 }
 
-interface StaffMember {
+interface LocalStaffMember {
   id: string;
   full_name: string;
 }
@@ -64,7 +64,7 @@ const BOOKING_TYPES = [
 const CreateBooking = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [staff, setStaff] = useState<StaffMember[]>([]);
+  const [staff, setStaff] = useState<LocalStaffMember[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [bookingType, setBookingType] = useState("day");
@@ -132,40 +132,12 @@ const CreateBooking = () => {
       }
     }
 
-    // Fetch staff - get only active staff
-    const { data: staffRoles } = await supabase
-      .from("user_roles")
-      .select("user_id")
-      .eq("role", "staff");
-
-    if (staffRoles && staffRoles.length > 0) {
-      const userIds = staffRoles.map(r => r.user_id);
-      
-      // Get profiles
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, full_name, phone")
-        .in("id", userIds);
-
-      // Get staff details to check active status
-      const { data: staffDetails } = await supabase
-        .from("staff_details")
-        .select("user_id, is_active")
-        .in("user_id", userIds);
-
-      if (profiles) {
-        // Only include active staff
-        const activeStaff = profiles.filter(p => {
-          const details = staffDetails?.find(d => d.user_id === p.id);
-          return details?.is_active !== false; // Include if active or no details found
-        });
-        
-        setStaff(activeStaff.map(p => ({
-          id: p.id,
-          full_name: p.full_name || "Unknown",
-        })));
-      }
-    }
+    // Fetch staff using shared utility
+    const activeStaff = await fetchActiveStaff();
+    setStaff(activeStaff.map(s => ({
+      id: s.user_id,
+      full_name: s.full_name,
+    })));
   };
 
   const handleCustomerSelect = async (customerId: string) => {
